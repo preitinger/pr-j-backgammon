@@ -184,7 +184,7 @@ public class Test {
         m.acceptResign();
         Utils.showMatch(m);
 
-        m.initialRoll(1, new Roll(4, 2));
+        m.initialRoll(1, new Roll(2, 4));
         Utils.showMatch(m);
         move.clear();
         move.add(8, 4, false);

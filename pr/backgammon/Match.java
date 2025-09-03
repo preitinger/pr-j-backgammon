@@ -7,6 +7,7 @@ public class Match {
     private final Cube cube = new Cube();
     private int active = -1;
     private final boolean testBearoff;
+    private boolean initialRoll = false;
 
     public Match(String[] playerNames, int indexOfOwn, int matchLen, boolean testBearoff) {
         if (playerNames.length != 2) {
@@ -46,10 +47,12 @@ public class Match {
         }
 
         players[active = owner].setRoll(roll);
+        initialRoll = true;
     }
 
     public void roll(Roll roll) {
         players[active].setRoll(roll);
+        initialRoll = false;
     }
 
     public void offerDouble(int offering) {
@@ -65,7 +68,12 @@ public class Match {
             throw new IllegalStateException();
         }
 
+        if (players[active].getRoll() != null) {
+            throw new IllegalStateException("Double only allowed before rolling.");
+        }
+
         int other = 1 - active;
+        players[other].resetRoll();
 
         cube.offerDouble(offering);
         active = other;
@@ -196,9 +204,7 @@ public class Match {
             int points = gameVal * cube.getValue();
             win(winner, points);
         } else {
-
             active = other;
-
         }
     }
 
@@ -343,5 +349,20 @@ public class Match {
         assert(fields[0][0] >= 0 && fields[1][0] >= 0);
         players[1 - own].debugField(fields[0]);
         players[own].debugField(fields[1]);
+    }
+
+    public int getActivePlayer() {
+        return active;
+    }
+
+    public Roll getRoll() {
+        if (active != -1) {
+            return players[active].getRoll();
+        }
+        return null;
+    }
+
+    public boolean isInitialRoll() {
+        return initialRoll;
     }
 }

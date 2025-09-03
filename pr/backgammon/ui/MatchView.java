@@ -6,15 +6,19 @@ import java.awt.font.LineMetrics;
 import javax.swing.JPanel;
 
 import pr.backgammon.Match;
+import pr.backgammon.Roll;
 
 public class MatchView extends JPanel {
     private final Match match;
     private final Polygon polygon = new Polygon();
     private final boolean clockwise;
+    private double dieAngle1, dieAngle2;
 
     public MatchView(Match match, boolean clockwise) {
         this.match = match;
         this.clockwise = clockwise;
+        this.dieAngle1 = -Math.PI / 8 + Math.random() * Math.PI / 4;
+        this.dieAngle2 = -Math.PI / 8 + Math.random() * Math.PI / 4;
     }
 
     @Override
@@ -62,6 +66,7 @@ public class MatchView extends JPanel {
                 cubeW,
                 cubeH,
                 match.getCubeVal(), cubeOwner == -1 ? (clockwise ? Math.PI / 2 : -Math.PI / 2) : cubeOwner == own ? 0 : Math.PI,
+                Color.WHITE,
                 Color.RED);
 
         int offeredResign = match.getOfferedResign();
@@ -73,10 +78,43 @@ public class MatchView extends JPanel {
                     cubeH,
                     Math.abs(offeredResign),
                     offeredResign > 0 ? 0 : Math.PI,
+                    Color.WHITE,
                     Color.GRAY);
         }
 
         paintScore(g2, left, top, unit, own);
+        paintRoll(g2, left, top, unit, own);
+    }
+
+    private void paintRoll(Graphics2D g, int boardx, int boardy, int unit, int own) {
+        int active = match.getActivePlayer();
+        if (active != -1) {
+            Roll roll = match.getRoll();
+            if (roll != null) {
+                boolean initial = match.isInitialRoll();
+                int x1, x2, fg1, fg2;
+                if (initial) {
+                    x1 = boardx + unit * 9;
+                    fg1 = 0;
+                    x2 = boardx + unit * 27;
+                    fg2 = 1;
+                } else if(active != own) {
+                    x1 = boardx + unit * 7;
+                    fg1 = 0;
+                    x2 = boardx + unit * 11;
+                    fg2 = 0;
+                } else {
+                    x1 = boardx + unit * 25;
+                    fg1 = 1;
+                    x2 = boardx + unit * 29;
+                    fg2 = 1;
+                }
+                int y = boardy + 13 * unit;
+                Color[] colors = { Color.WHITE, Color.BLACK };
+                paintCube(g, x1 - unit, y - unit, unit * 2, unit * 2, roll.die1(), dieAngle1, colors[fg1], colors[1 - fg1]);
+                paintCube(g, x2 - unit, y - unit, unit * 2, unit * 2, roll.die2(), dieAngle2, colors[fg2], colors[1 - fg2]);
+            }
+        }
     }
 
     private void paintScore(Graphics2D g, int boardx, int boardy, int unit, int own) {
@@ -249,9 +287,11 @@ public class MatchView extends JPanel {
         g.fillPolygon(p);
     }
 
-    private void paintCube(Graphics2D g, int x, int y, int w, int h, int val, double rotation, Color color) {
-        g.setPaint(color);
-        g.fillRoundRect(x, y, w, h, 10, 10);
+    private void paintCube(Graphics2D g, int x, int y, int w, int h, int val, double rotation, Color fg, Color bg) {
+        g.translate(x + w / 2, y + h / 2);
+        g.rotate(rotation);
+        g.setPaint(bg);
+        g.fillRoundRect(-w / 2, -h / 2, w, h, 10, 10);
         // g.setPaint(Color.WHITE);
         // g.fillRect(x + 12, y + 12, w - 24, h - 24);
         String s = String.valueOf(val);
@@ -259,9 +299,7 @@ public class MatchView extends JPanel {
         g.setFont(oldFont.deriveFont(Font.BOLD));
         FontMetrics fm = g.getFontMetrics();
         LineMetrics lm = fm.getLineMetrics(s, g);
-        g.setColor(Color.WHITE);
-        g.translate(x + w / 2, y + h / 2);
-        g.rotate(rotation);
+        g.setColor(fg);
         g.drawString(s, (-fm.stringWidth(s)) / 2, (-lm.getHeight()) / 2 + lm.getAscent());
         g.rotate(-rotation);
         g.translate(-(x + w / 2), -(y + h / 2));
