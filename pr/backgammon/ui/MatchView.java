@@ -59,13 +59,14 @@ public class MatchView extends JPanel {
         paintCheckersOnPips(g2, left, top, unit, own, checkerColors);
         paintCheckersOnBar(g2, left, top, unit, own, checkerColors);
 
+        String cubeString = match.isCrawfordRound() ? "CR" : String.valueOf(match.getCubeVal());
         paintCube(g2,
                 match.isCubeOffered() ? (cubeOwner == own ? cubeOfferedOwnX : cubeOfferedOppX) : cubeX,
                 match.isCubeOffered() ? cubeInitY
                         : (cubeOwner == -1 ? cubeInitY : cubeOwner == own ? cubeOwnY : cubeOppY),
                 cubeW,
                 cubeH,
-                match.getCubeVal(), cubeOwner == -1 ? (clockwise ? Math.PI / 2 : -Math.PI / 2) : cubeOwner == own ? 0 : Math.PI,
+                cubeString, cubeOwner == -1 ? (clockwise ? Math.PI / 2 : -Math.PI / 2) : cubeOwner == own ? 0 : Math.PI,
                 Color.WHITE,
                 Color.RED);
 
@@ -288,13 +289,16 @@ public class MatchView extends JPanel {
     }
 
     private void paintCube(Graphics2D g, int x, int y, int w, int h, int val, double rotation, Color fg, Color bg) {
+        paintCube(g, x, y, w, h, String.valueOf(val), rotation, fg, bg);
+    }
+
+    private void paintCube(Graphics2D g, int x, int y, int w, int h, String s, double rotation, Color fg, Color bg) {
         g.translate(x + w / 2, y + h / 2);
         g.rotate(rotation);
         g.setPaint(bg);
         g.fillRoundRect(-w / 2, -h / 2, w, h, 10, 10);
         // g.setPaint(Color.WHITE);
         // g.fillRect(x + 12, y + 12, w - 24, h - 24);
-        String s = String.valueOf(val);
         Font oldFont = g.getFont();
         g.setFont(oldFont.deriveFont(Font.BOLD));
         FontMetrics fm = g.getFontMetrics();

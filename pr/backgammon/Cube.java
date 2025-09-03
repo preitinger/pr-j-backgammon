@@ -61,4 +61,14 @@ public class Cube {
     public int getOwner() {
         return owner;
     }
+
+    public void drop() {
+        if (!offered || value < 2 || owner == -1) {
+            throw new IllegalStateException();
+        }
+
+        value >>= 1;
+        owner = -1;
+        offered = false;
+    }
 }

@@ -89,19 +89,6 @@ public class Player {
         return resign;
     }
 
-    /**
-     * @return points added to the score of this player
-     */
-    public int acceptResign(int cubeValue) {
-        if (resign == 0) {
-            throw new IllegalStateException();
-        }
-        int points = resign * cubeValue;
-        score += points;
-        resign = 0;
-        return points;
-    }
-
     public int getCheckers(int field) {
         return this.field.getCheckers(field);
     }

@@ -4,13 +4,18 @@ public class Match {
     private final Player[] players = new Player[2];
     private final int own;
     private final int matchLen;
+    private final boolean crawfordRule = true;
     private final Cube cube = new Cube();
     private int active = -1;
     private final boolean testBearoff;
     private boolean initialRoll = false;
+    private boolean crawfordRound;
 
     public Match(String[] playerNames, int indexOfOwn, int matchLen, boolean testBearoff) {
         if (playerNames.length != 2) {
+            throw new IllegalArgumentException();
+        }
+        if (matchLen < 1) {
             throw new IllegalArgumentException();
         }
 
@@ -27,6 +32,7 @@ public class Match {
             players[0].testBearoff();
             players[1].testBearoff();
         }
+        crawfordRound = crawfordRule && matchLen == 1;
     }
 
     public int getIndexOfOwn() {
@@ -72,6 +78,10 @@ public class Match {
             throw new IllegalStateException("Double only allowed before rolling.");
         }
 
+        if (crawfordRound) {
+            throw new IllegalStateException("Crawford Round");
+        }
+
         int other = 1 - active;
         players[other].resetRoll();
 
@@ -102,10 +112,9 @@ public class Match {
         if (cube.getOwner() != active) {
             throw new IllegalStateException();
         }
-        int points = cube.getValue();
-        assert(points >= 2);
-        points >>= 1;
-        win(1 - active, points);
+
+        cube.drop();
+        win(1 - active, 1);
     }
 
     public void move(Move move) {
@@ -201,14 +210,14 @@ public class Match {
             boolean isGammon = players[other].getCheckers(0) == 0;
             boolean isBackgammon = isGammon && players[other].hasCheckerBefore18();
             int gameVal = isBackgammon ? 3 : isGammon ? 2 : 1;
-            int points = gameVal * cube.getValue();
-            win(winner, points);
+            win(winner, gameVal);
         } else {
             active = other;
         }
     }
 
-    private void win(int winner, int points) {
+    private void win(int winner, int undoubledPoints) {
+        int points = undoubledPoints * cube.getValue();
         players[winner].win(points);
 
         if (players[winner].getScore() >= matchLen) {
@@ -224,9 +233,10 @@ public class Match {
                 p.resetResign();
             }
             cube.reset();
+            crawfordRound = crawfordRule &&  (players[1 - winner].getScore() != matchLen - 1 && players[winner].getScore() == matchLen - 1);
+            this.active = -1;
         }
 
-        this.active = -1;
     }
 
     public void offerResign(int offeringPlayer, int val) {
@@ -246,17 +256,20 @@ public class Match {
     }
 
     public void acceptResign() {
-        int winner, points;
+        int winner;
+        int resign;
 
-        if (players[0].getOfferedResign() > 0) {
+        if ((resign = players[0].getOfferedResign()) > 0) {
             winner = 0;
-            points = players[0].acceptResign(cube.getValue());
-        } else if (players[1].getOfferedResign() > 0) {
+            players[0].resetResign();
+        } else if ((resign = players[1].getOfferedResign()) > 0) {
             winner = 1;
-            points = players[1].acceptResign(cube.getValue());
+            players[1].resetResign();
         } else {
             throw new IllegalStateException();
         }
+
+        win(winner, resign);
 
         if (players[winner].getScore() >= matchLen) {
             setEndOfMatch();
@@ -346,7 +359,7 @@ public class Match {
             }
         }
 
-        assert(fields[0][0] >= 0 && fields[1][0] >= 0);
+        assert (fields[0][0] >= 0 && fields[1][0] >= 0);
         players[1 - own].debugField(fields[0]);
         players[own].debugField(fields[1]);
     }
@@ -364,5 +377,13 @@ public class Match {
 
     public boolean isInitialRoll() {
         return initialRoll;
+    }
+
+    public boolean isCrawfordRound() {
+        return crawfordRound;
+    }
+
+    public boolean isCrawfordRule() {
+        return crawfordRule;
     }
 }

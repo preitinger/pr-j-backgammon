@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 
 import pr.backgammon.ui.MatchView;
 
+@SuppressWarnings("unused")
 public class Test {
     private static void paintField1() throws InterruptedException {
         Match m = new Match(new String[] { "Gegner", "Ich" }, 1, 3, false);
@@ -202,7 +203,7 @@ public class Test {
         move.add(new PartMove(6, 0, false));
         m.move(move);
         // Utils.showMatch(m);
-        
+
         m.initialRoll(0, new Roll(1, 2));
         move.clear();
         move.add(6, 5, false);
@@ -269,10 +270,9 @@ public class Test {
         move.add(new PartMove(6, 4, false));
         m.move(move);
 
-        m.offerDouble(0);
+        m.offerResign(1, 1);
         Utils.showMatch(m);
-
-        m.drop();
+        m.acceptResign();
         Utils.showMatch(m);
 
         m.initialRoll(1, new Roll(1, 2));
@@ -282,15 +282,99 @@ public class Test {
         m.move(move);
 
         Utils.showMatch(m);
+
+        m.offerDouble(0);
+        Utils.showMatch(m);
+
+        m.drop();
+        Utils.showMatch(m);
+    }
+
+    private static void testCrawford() throws Exception {
+        Match m = new Match(new String[] { "Gegner", "Ich" }, 1, 3, true);
+        m.initialRoll(0, new Roll(1, 2));
+        Move move = new Move();
+        move.add(new PartMove(6, 5, false));
+        move.add(new PartMove(6, 4, false));
+        m.move(move);
+
+        m.offerDouble(1);
+        // Utils.showMatch(m);
+
+        m.drop();
+        // Utils.showMatch(m);
+
+        m.initialRoll(0, new Roll(1, 2));
+        move.clear();
+        move.add(new PartMove(6, 5, false));
+        move.add(new PartMove(6, 4, false));
+        m.move(move);
+
+        m.offerDouble(1);
+        Utils.showMatch(m);
+
+        m.drop();
+        Utils.showMatch(m);
+
+        // Now, crawford round.
+
+        m.initialRoll(1, new Roll(1, 2));
+        move.clear();
+        move.add(new PartMove(6, 5, false));
+        move.add(new PartMove(6, 4, false));
+        m.move(move);
+        Utils.showMatch(m);
+
+        try {
+            // expected to throw IllegalStateException:
+            m.offerDouble(0);
+            // not expected to reach this line, because exception expected
+            throw new Exception("Expected IllegalStateException missing");
+        } catch (IllegalStateException ex) {
+            // expected, ignore
+        }
+        // Utils.showMatch(m);
+
+        m.offerResign(1, 1);
+        m.acceptResign();
+        // Utils.showMatch(m);
+
+        // Now, post-crawford.
+
+        m.initialRoll(1, new Roll(1, 2));
+        move.clear();
+        move.add(new PartMove(6, 5, false));
+        move.add(new PartMove(6, 4, false));
+        m.move(move);
+
+        Utils.showMatch(m);
+
+        m.offerDouble(0); // must not throw because of post-crawford round.
+        Utils.showMatch(m);
+
+        m.take();
+        Utils.showMatch(m);
+
+        m.roll(new Roll(4, 4));
+        Utils.showMatch(m);
+        move.clear();
+        move.add(6, 2, false);
+        move.add(6, 2, false);
+        move.add(2, 0, false);
+        move.add(2, 0, false);
+        m.move(move);
+        Utils.showMatch(m);
+
     }
 
     public static void main(String[] args) throws Exception {
         // paintField1();
-        paint4OnOwnBar();
+        // paint4OnOwnBar();
         // paint4OnOppBar();
-        testResign();
+        // testResign();
         // testBearoff();
-        testDrop();
+        // testDrop();
+        testCrawford();
     }
 
 }
