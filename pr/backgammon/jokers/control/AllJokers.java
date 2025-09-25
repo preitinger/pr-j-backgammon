@@ -18,6 +18,10 @@ public class AllJokers {
             r[die] = new DoubleFromBar(die);
         }
 
+        // TODO Append more jokers here.
+        // Also see the activity addJoker in pr-home/app/_lib/count-jokers/CountJokersAdminPage.tsx
+        // to add a new joker to the MongoDB.
+
         return r;
     }
     private final Joker[] jokers;
