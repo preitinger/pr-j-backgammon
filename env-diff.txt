@@ -1,0 +1,75 @@
+9,10d8
+< TERM_PROGRAM_VERSION=1.103.2
+< XDG_CONFIG_DIRS_VSCODE_SNAP_ORIG=/etc/xdg/xdg-ubuntu:/etc/xdg
+13,14d10
+< GDK_BACKEND_VSCODE_SNAP_ORIG=
+< FONTCONFIG_PATH=/etc/fonts
+17d12
+< GIO_MODULE_DIR_VSCODE_SNAP_ORIG=
+21d15
+< XDG_DATA_HOME=/home/peter/snap/code/205/.local/share
+25d18
+< BAMF_DESKTOP_FILE_HINT=/var/lib/snapd/desktop/applications/code_code.desktop
+28,29d20
+< GSETTINGS_SCHEMA_DIR=/home/peter/snap/code/205/.local/share/glib-2.0/schemas
+< XDG_SESSION_DESKTOP=ubuntu
+31c22
+< GTK_EXE_PREFIX=/snap/code/205/usr
+---
+> XDG_SESSION_DESKTOP=ubuntu
+35c26
+< SYSTEMD_EXEC_PID=1579
+---
+> SYSTEMD_EXEC_PID=1855
+37,38d27
+< VSCODE_GIT_ASKPASS_NODE=/snap/code/205/usr/share/code/code
+< GJS_DEBUG_TOPICS=JS ERROR;JS LOG
+45,53c34,36
+< XDG_CURRENT_DESKTOP=Unity
+< GIT_ASKPASS=/snap/code/205/usr/share/code/resources/app/extensions/git/dist/askpass.sh
+< INVOCATION_ID=fb84ad69579e4ac5bb1ae2e22f7d42be
+< MANAGERPID=1138
+< CHROME_DESKTOP=code.desktop
+< GJS_DEBUG_OUTPUT=stderr
+< VSCODE_GIT_ASKPASS_EXTRA_ARGS=
+< GSETTINGS_SCHEMA_DIR_VSCODE_SNAP_ORIG=
+< GTK_IM_MODULE_FILE_VSCODE_SNAP_ORIG=
+---
+> XDG_CURRENT_DESKTOP=ubuntu:GNOME
+> VTE_VERSION=6800
+> GNOME_TERMINAL_SCREEN=/org/gnome/Terminal/screen/579e19e1_c87a_454b_9d55_d6a53231fd24
+58d40
+< GTK_PATH=/snap/code/205/usr/lib/x86_64-linux-gnu/gtk-3.0
+61,62c43
+< GTK_PATH_VSCODE_SNAP_ORIG=
+< VSCODE_GIT_IPC_HANDLE=/run/user/1000/vscode-git-d96a729a79.sock
+---
+> GNOME_TERMINAL_SERVICE=:1.235
+65d45
+< LOCPATH=/snap/code/205/usr/lib/locale
+68d47
+< XDG_DATA_HOME_VSCODE_SNAP_ORIG=
+70d48
+< GTK_EXE_PREFIX_VSCODE_SNAP_ORIG=
+73d50
+< XDG_DATA_DIRS_VSCODE_SNAP_ORIG=/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+75,79c52
+< FONTCONFIG_FILE=/etc/fonts/fonts.conf
+< VSCODE_GIT_ASKPASS_MAIN=/snap/code/205/usr/share/code/resources/app/extensions/git/dist/askpass-main.js
+< JOURNAL_STREAM=8:400
+< XDG_DATA_DIRS=/home/peter/snap/code/205/.local/share:/home/peter/snap/code/205:/snap/code/205/usr/share:/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+< GDK_BACKEND=x11
+---
+> XDG_DATA_DIRS=/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+82,83d54
+< ORIGINAL_XDG_CURRENT_DESKTOP=ubuntu:GNOME
+< GTK_IM_MODULE_FILE=/home/peter/snap/code/common/.cache/immodules/immodules.cache
+85,88d55
+< LOCPATH_VSCODE_SNAP_ORIG=
+< GIO_MODULE_DIR=/home/peter/snap/code/common/.cache/gio-modules
+< GIO_LAUNCHED_DESKTOP_FILE_PID=5955
+< GIO_LAUNCHED_DESKTOP_FILE=/var/lib/snapd/desktop/applications/code_code.desktop
+90c57
+< TERM_PROGRAM=vscode
+---
+> OLDPWD=/home/peter/my_projects/individual-gits

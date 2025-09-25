@@ -1,7 +1,8 @@
 package pr.backgammon;
 
-import pr.Tools;
+import pr.control.Tools;
 
+@Deprecated
 public class MatchWriter {
     public MatchWriter(int len, String ownPlayer, String oppPlayer,
             MatchTextAppender appender) {

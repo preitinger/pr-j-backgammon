@@ -1,0 +1,11 @@
+{
+    "javascript.updateImportsOnPaste.enabled": false,
+    "typescript.updateImportsOnPaste.enabled": false,
+    "java.import.organizeImportsOnPaste": false,
+    "java.project.sourcePaths": [
+        "."
+    ],
+    "java.project.referencedLibraries": [
+        "/home/peter/javaee/glassfish5/glassfish/modules/javax.json.jar"
+    ]
+}

@@ -3,6 +3,7 @@ package pr.backgammon;
 /**
  * immutable, so no copy constructor because no copying
  */
+@Deprecated
 public class PartMove {
     /**
      * 25 is bar

@@ -1,0 +1,11 @@
+# GNU Backgammon - Analyse für ohne Doppeln
+
+set cube use on
+
+set evaluation chequerplay evaluation cubeful on
+set evaluation cubedecision evaluation cubeful on
+set analysis cube on
+set analysis chequerplay evaluation cubeful on
+set analysis cubedecision evaluation cubeful on
+set analysis luckanalysis cubeful on
+

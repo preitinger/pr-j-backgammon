@@ -1,0 +1,33 @@
+{
+    "globalAccId": "68ac2854f60b95ed625d6f22",
+    "name1": "Test A",
+    "name2": "Test B",
+    "counts1": [
+        {
+            "name": "Prime5FromBarEscape",
+            "pos": 2,
+            "neg": 38
+        },
+        {
+            "name": "OtherForTesting",
+            "pos": 10,
+            "neg": 20
+        }
+    ],
+    "counts2": [
+        {
+            "name": "Prime5FromBarEscape",
+            "pos": 20,
+            "neg": 380
+        },
+        {
+            "name": "OtherForTesting",
+            "pos": 100,
+            "neg": 200
+        }
+    ],
+    "version": {
+        "main": 0,
+        "sub": 20
+    }
+}

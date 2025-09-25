@@ -1,0 +1,718 @@
+new match 5
+set player 0 name tim64
+set player 1 name Verspielt
+# GNU Backgammon - Analyse für ohne Doppeln
+
+set cube use off
+
+set evaluation chequerplay evaluation cubeful off
+set evaluation cubedecision evaluation cubeful off
+set analysis luckanalysis cubeful off
+
+set cube use off
+set evaluation chequerplay evaluation cubeful off
+set evaluation cubedecision evaluation cubeful off
+set analysis cube off
+set analysis chequerplay evaluation cubeful off
+set analysis cubedecision evaluation cubeful off
+set analysis luckanalysis cubeful off
+
+
+
+set turn 1
+set dice 3 6
+move 24 18 13 10
+set dice 2 5
+move 24 22 13 8
+set dice 5 3
+move 10 5 8 5
+set dice 1 5
+move 6 1 8 7
+set dice 4 4
+move 25 21 25 21 13 9 13 9
+set dice 1 3
+move 8 7 24 21
+set dice 2 4
+move 8 4 6 4
+set dice 6 4
+move
+set dice 2 2
+move 5 3 5 3 9 7 9 7
+set dice 2 1
+move 25 23 25 24
+set dice 3 1
+move 8 5 6 5
+set dice 2 4
+move 13 11 11 7
+set dice 3 5
+move 21 16 16 13
+set dice 3 5
+move 6 1 6 3
+set dice 2 4
+move 6 2 13 11
+set dice 5 2
+move 25 23 8 3
+set dice 4 4
+move 25 21 21 17 21 17 11 7
+set dice 6 2
+move 25 23 13 7
+set dice 1 5
+move 7 6 6 1
+set dice 1 3
+move 25 24 7 4
+set dice 4 2
+move 25 21 13 11
+set dice 4 5
+move
+set dice 2 5
+move 11 6 13 11
+set dice 6 1
+move 25 24 7 1
+set dice 3 3
+move 17 14 11 8 8 5 6 3
+set dice 3 2
+move 13 11 11 8
+set dice 3 1
+move
+set dice 4 6
+move 8 4 23 17
+set dice 5 6
+move 25 20
+set dice 2 2
+move 7 5 7 5 13 11 11 9
+set dice 1 6
+move
+set dice 3 5
+move 17 14 9 4
+set dice 3 2
+move 25 23
+set dice 5 5
+move 6 1 14 9 9 4 6 1
+set dice 4 1
+move
+set dice 4 1
+move 5 1 5 4
+set dice 6 1
+move 25 19
+set dice 6 2
+move 23 17 4 2
+set dice 3 6
+move 25 19
+set dice 5 1
+move 17 12 24 23
+set dice 1 5
+move 25 20 3 2
+set dice 3 3
+move
+set dice 3 2
+move 5 2 19 17
+set dice 4 6
+move
+set dice 6 4
+move 7 1 17 13
+set dice 3 6
+move
+set dice 4 6
+move 7 1 20 16
+set dice 5 3
+move
+set dice 6 5
+move 19 13 16 11
+set dice 3 6
+move
+set dice 4 3
+move 13 9 13 10
+set dice 1 6
+move
+set dice 5 3
+move 10 5 9 6
+set dice 6 3
+move
+set dice 1 6
+move 11 5 5 4
+set dice 5 4
+move
+set dice 2 3
+move 5 2 2 0
+set dice 2 4
+move
+set dice 6 5
+move 6 0 5 0
+set dice 4 3
+move
+set dice 4 4
+move 4 0 4 0 4 0 5 1
+set dice 6 4
+move 25 21
+set dice 2 4
+move 6 4 4 0
+set dice 2 4
+move 25 21
+set dice 6 4
+move 6 0 3 0
+set dice 6 5
+move 25 19 25 20
+set dice 4 2
+move 3 0 2 0
+set dice 2 2
+move 21 19 20 18 19 17 19 17
+set dice 4 4
+move 2 0 1 0 1 0 1 0
+set turn 1
+set dice 3 2
+move 24 21 13 11
+set dice 5 4
+move 24 20 13 8
+set dice 6 1
+move 11 5 6 5
+set dice 1 3
+move 25 22 22 21
+set dice 1 2
+move 6 4 6 5
+set dice 2 4
+move 25 21 13 11
+set dice 2 2
+move 25 23 8 6 6 4 23 21
+set dice 6 5
+move
+set dice 5 2
+move 21 16 16 14
+set dice 5 3
+move 25 22
+set dice 6 3
+move 13 7 7 4
+set dice 4 5
+move
+set dice 4 6
+move 13 7 7 3
+set dice 2 1
+move 25 23 25 24
+set dice 3 4
+move 14 10 24 21
+set dice 4 2
+move 24 22 22 18
+set dice 1 4
+move 25 24 5 1
+set dice 2 3
+move 25 23 18 15
+set dice 6 6
+move
+set dice 3 1
+move 6 5 8 5
+set dice 5 5
+move
+set dice 4 4
+move 5 1 5 1 6 2 6 2
+set dice 2 2
+move
+set dice 2 4
+move 8 6 13 9
+set dice 3 4
+move 25 21 25 22
+set dice 6 1
+move 23 22 15 9
+set dice 3 2
+move 21 18 22 20
+set dice 1 4
+move 6 5 9 5
+set dice 2 6
+move
+set dice 1 1
+move 23 22 9 8 8 7 7 6
+set dice 5 4
+move 25 21
+set dice 6 1
+move 22 16 16 15
+set dice 5 5
+move
+set dice 6 2
+move 15 13 22 16
+set dice 5 2
+move
+set dice 3 2
+move 16 14 14 11
+set dice 6 6
+move
+set dice 1 1
+move 11 10 10 9 8 7 8 7
+set dice 6 6
+move
+set dice 3 5
+move 13 10 10 5
+set dice 3 1
+move 25 22 22 21
+set dice 2 1
+move 9 8 8 6
+set dice 2 3
+move 8 5 5 3
+set dice 2 1
+move 5 3 6 5
+set dice 6 4
+move 21 15 15 11
+set dice 1 4
+move 7 6 7 3
+set dice 1 1
+move 11 10 10 9 9 8 8 7
+set dice 2 6
+move 13 7 7 5
+set dice 2 1
+move 3 1 13 12
+set dice 1 6
+move
+set dice 6 6
+move 13 7 21 15 21 15 21 15
+set dice 4 2
+move 25 23 5 1
+set dice 3 2
+move 8 6 15 12
+set dice 2 5
+move 6 1 5 3
+set dice 2 1
+move 15 13 13 12
+set dice 6 4
+move 23 17 6 2
+set dice 1 6
+move 15 9 9 8
+set dice 5 1
+move
+set dice 3 6
+move 12 6 8 5
+set dice 1 2
+move 25 23 23 22
+set dice 1 3
+move 6 3 5 4
+set dice 3 2
+move 25 22 3 1
+set dice 1 6
+move
+set dice 5 1
+move 22 17 17 16
+set dice 4 6
+move 25 21 7 1
+set dice 6 5
+move 16 10 10 5
+set dice 3 2
+move 6 3 12 10
+set dice 2 1
+move 5 4 4 2
+set dice 5 4
+move 25 21 12 7
+set dice 2 4
+move 5 1 5 3
+set dice 2 6
+move 10 4 4 2
+set dice 5 6
+move 6 0 6 1
+set dice 1 6
+move 21 15 7 6
+set dice 4 3
+move 3 0 3 0
+set dice 4 6
+move 15 9 9 5
+set dice 3 3
+move 3 0 2 0 2 0 2 0
+set dice 2 6
+move 7 1 2 0
+set dice 4 5
+move 2 0 1 0
+set dice 6 1
+move 6 0 1 0
+set dice 3 2
+move 1 0 1 0
+set dice 4 5
+move 4 0 5 0
+set dice 4 6
+move 1 0 1 0
+set dice 1 1
+move 1 0 1 0 1 0 6 5
+set dice 2 6
+# 
+# Faden verloren, setze neu auf...
+# 
+new match 5
+set score 1 2
+set crawford off
+set turn 1
+set board simple 0 0 0 -1 0 0 5 -1 3 0 0 0 -5 5 0 0 0 -3 0 -5 0 0 0 0 2 0
+set dice 4 3
+move 24 21 24 20
+set dice 5 3
+move 6 3 8 3
+set dice 2 5
+move 20 15 15 13
+set dice 2 5
+move 22 20 18 13
+set dice 6 6
+move 21 15 15 9 9 3 8 2
+set dice 5 4
+move 20 16 16 11
+set dice 4 3
+move 13 9 8 5
+set dice 1 3
+move 13 10 10 9
+set dice 6 2
+move 13 7 7 5
+set dice 6 4
+move 13 9 9 3
+set dice 5 5
+move 13 8 13 8 13 8 13 8
+set dice 4 1
+move 13 12 8 4
+set dice 1 5
+move 9 4 8 7
+set dice 5 1
+move 13 12 11 6
+set dice 1 1
+move 7 6 8 7 7 6 6 5
+set dice 5 5
+move 13 8 13 8 9 4 8 3
+set dice 5 6
+move 8 2 8 3
+set dice 6 1
+move 8 7 12 6
+set dice 2 6
+move 8 2 2 0
+set dice 3 1
+move 7 6 8 5
+set dice 4 2
+move 4 0 2 0
+set dice 4 4
+move 12 8 8 4 4 0 4 0
+set dice 3 5
+move 5 0 3 0
+set dice 1 4
+move 4 0 3 2
+set dice 3 6
+move 3 0 6 0
+set dice 4 6
+move 6 0 6 2
+set dice 3 2
+move 2 0 6 3
+set dice 1 4
+move 5 1 1 0
+set dice 5 1
+move 5 0 6 5
+set dice 2 1
+move 2 0 6 5
+set dice 5 3
+move 5 0 3 0
+set dice 2 3
+move 3 0 2 0
+set dice 1 5
+move 6 1 1 0
+set dice 4 3
+move 3 0 6 2
+set dice 5 6
+move 6 0 5 0
+set dice 2 1
+move 2 0 6 5
+set dice 1 2
+move 6 4 4 3
+set dice 3 6
+move 6 0 3 0
+set dice 1 3
+move 3 2 2 0
+set turn 1
+set dice 4 1
+move 13 9 24 23
+set dice 2 2
+move 6 4 13 11 13 11 6 4
+set dice 2 5
+move 9 4 6 4
+set dice 5 4
+move 24 20 20 15
+set dice 1 4
+move 13 9 23 22
+set dice 1 6
+move 6 5 11 5
+set dice 2 3
+move 24 22 13 10
+set dice 5 4
+move 25 20 20 16
+set dice 1 5
+move 25 24 10 5
+set dice 3 3
+move 4 1 16 13 8 5 4 1
+set dice 6 2
+move 25 23 8 2
+set dice 1 1
+move 24 23 11 10 10 9 9 8
+set dice 2 6
+move 25 23 8 2
+set dice 2 6
+move 25 23 23 17
+set dice 6 4
+move 25 21
+set dice 4 6
+move 13 7 8 4
+set dice 3 5
+move 25 22
+set dice 5 2
+move 7 5 13 8
+set dice 2 4
+move 25 21 23 21
+set dice 5 5
+move 25 20 20 15 13 8 13 8
+set dice 5 3
+move 25 22 13 8
+set dice 6 3
+move 25 22 15 9
+set dice 6 2
+move 22 16 6 4
+set dice 4 6
+move
+set dice 5 2
+move 8 3 13 11
+set dice 6 3
+move 25 22
+set dice 4 5
+move 25 21 21 16
+set dice 1 5
+move 25 24 22 17
+set dice 6 3
+move 11 8 16 10
+set dice 1 1
+move 25 24 24 23 8 7 8 7
+set dice 5 4
+move 10 5 5 1
+set dice 4 6
+move
+set dice 6 2
+move 8 2 4 2
+set dice 4 1
+move 25 24
+set dice 1 1
+move
+set dice 3 3
+move 25 22 5 2 8 5 5 2
+set dice 3 4
+move 25 21 25 22
+set dice 1 1
+move 8 7 8 7 7 6 7 6
+set dice 5 3
+move 22 17 17 14
+set dice 2 5
+move 24 22 22 17
+set dice 1 5
+move 14 9 9 8
+set dice 6 1
+move 25 24 22 16
+set dice 3 1
+move 8 5 6 5
+set dice 1 1
+move 16 15 15 14 14 13 13 12
+set dice 3 6
+move 16 13 22 16
+set dice 1 5
+move 25 24 6 1
+set dice 5 1
+move 21 16 16 15
+set dice 1 3
+move 5 2 6 5
+set dice 6 6
+move 21 15 15 9 15 9 21 15
+set dice 1 4
+move 5 1 2 1
+set dice 4 4
+move 13 9 9 5 16 12 15 11
+set dice 1 1
+move 5 4 5 4 6 5 6 5
+set dice 5 6
+move 12 6 11 6
+set dice 1 1
+move 2 1 7 6 7 6 2 1
+set dice 2 3
+move 5 3 6 3
+set dice 5 4
+move 6 1 6 2
+set dice 3 2
+move 9 6 6 4
+set dice 1 2
+move 4 2 2 1
+set dice 4 5
+move 22 17 9 5
+set dice 4 3
+move 5 1 5 2
+set dice 6 4
+move 17 11 11 7
+set dice 4 5
+move
+set dice 6 6
+move 22 16 16 10 10 4
+set dice 1 3
+move 4 1 2 1
+set dice 1 5
+move 7 6 5 0
+set dice 6 3
+move 24 18 18 15
+set dice 4 5
+move 6 1 4 0
+set dice 1 1
+move 25 24 2 1 15 14 14 13
+set dice 6 1
+move 25 19 6 5
+set dice 6 1
+move 24 18 18 17
+set dice 4 4
+move 19 15 15 11 11 7 7 3
+set dice 3 2
+move 17 15 15 12
+set dice 6 2
+move 6 0 2 0
+set dice 5 5
+move 12 7 13 8 8 3 7 2
+set dice 6 4
+move 6 0 4 0
+set dice 1 1
+move 1 0 1 0 1 0 1 0
+set dice 1 3
+move 3 0 5 4
+set dice 5 2
+move 3 0 2 0
+set dice 3 1
+move 3 0 4 3
+set dice 5 2
+move 1 0 1 0
+set dice 5 2
+move 5 0 2 0
+set dice 1 1
+move 1 0 1 0 1 0 1 0
+set dice 4 4
+move 4 0 4 0 5 1 3 0
+set dice 3 2
+move 1 0 1 0
+set dice 3 6
+move 3 0 1 0
+set turn 0
+set dice 1 3
+move 6 5 8 5
+set dice 5 3
+move 8 3 6 3
+set dice 3 4
+move 8 5 13 9
+set dice 5 6
+move 24 18 18 13
+set dice 6 5
+move 8 3 9 3
+set dice 1 3
+move 8 5 6 5
+set dice 3 4
+move 24 21 21 17
+set dice 4 3
+move 25 21 24 21
+set dice 3 1
+move 17 16 16 13
+set dice 1 2
+move 13 11 11 10
+set dice 5 4
+move 6 1 5 1
+set dice 3 4
+move 13 9 13 10
+set dice 4 1
+move 24 23 6 2
+set dice 4 2
+move 9 5 13 11
+set dice 6 5
+move 13 7 7 2
+set dice 1 5
+move 11 6 6 5
+set dice 3 3
+move 13 10 13 10 10 7 10 7
+set dice 3 2
+move 10 7 7 5
+set dice 5 2
+move 23 21 21 16
+set dice 6 4
+move 13 9 9 3
+set dice 5 6
+move
+set dice 1 1
+move 5 4 5 4 10 9 5 4
+set dice 4 4
+move
+set dice 6 1
+move 13 7 7 6
+set dice 4 1
+move 25 24 7 3
+set dice 3 5
+move 21 18 9 4
+set dice 5 6
+move
+set dice 5 2
+move 6 1 3 1
+set dice 2 5
+move 25 23
+set dice 5 3
+move 18 13 13 10
+set dice 4 6
+move
+set dice 2 3
+move 4 2 10 7
+set dice 2 6
+move 25 23
+set dice 5 1
+move
+set dice 6 3
+move
+set dice 4 1
+move 25 21 7 6
+set dice 5 5
+move
+set dice 2 2
+move 6 4 4 2 4 2 6 4
+set dice 3 2
+move
+set dice 6 3
+move 21 15 21 18
+set dice 2 2
+move
+set dice 5 2
+move 18 13 13 11
+set dice 2 4
+move
+set dice 1 2
+move 15 13 11 10
+set dice 3 1
+move
+set dice 2 2
+move 13 11 11 9 10 8 9 7
+set dice 4 3
+move
+set dice 3 6
+move 8 2 7 4
+set dice 5 2
+move
+set dice 3 4
+move 6 2 6 3
+set dice 4 4
+move
+set dice 4 3
+move 5 1 5 2
+set dice 2 4
+move
+set dice 5 3
+move 4 0 4 1
+set dice 6 3
+move 25 19
+set dice 5 4
+move 4 0 4 0
+set dice 1 4
+move 25 21 19 18
+set dice 6 4
+move 3 0 3 0
+set dice 5 2
+move 21 19 19 14
+set dice 3 4
+move 3 0 2 0
+set dice 2 1
+move 18 17 17 15
+set dice 1 5
+move 2 0 1 0
+set dice 5 1
+move 15 14 14 9
+set dice 4 2
+move 2 0 2 0
+set dice 6 5
+move 9 3 14 9
+set dice 5 5
+move 2 0 1 0 1 0 1 0
