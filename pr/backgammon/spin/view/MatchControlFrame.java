@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -23,6 +25,8 @@ public class MatchControlFrame extends JFrame {
 
     public MatchControlFrame(JComponent matchView, JComponent matchMenu, JComponent jokersViewOwn,
             JComponent jokersViewOpp, MatchControlFrameListener listener) {
+        
+        super("Spin-Matchkontrolle");
         this.listener = listener;
         JScrollPane commentsSp = new JScrollPane(textArea = new JTextArea(""));
         textArea.setWrapStyleWord(true);
@@ -145,6 +149,13 @@ public class MatchControlFrame extends JFrame {
 
         setBounds(right - 1112, 27, 1112, 812);
 
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                listener.onClose();
+            }
+        });
     }
 
     public void appendText(String s) {

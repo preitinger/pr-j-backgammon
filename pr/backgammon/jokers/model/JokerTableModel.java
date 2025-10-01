@@ -31,7 +31,7 @@ public class JokerTableModel extends AbstractTableModel {
             case 2:
                 return joker.neg;
             case 3:
-                return joker.pos + joker.neg == 0 ? null : joker.pos / (joker.pos + joker.neg);
+                return joker.pos + joker.neg == 0 ? null : (double) joker.pos / (joker.pos + joker.neg);
             case 4:
                 return joker.prob;
             default:

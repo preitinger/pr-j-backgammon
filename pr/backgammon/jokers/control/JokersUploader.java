@@ -12,14 +12,18 @@ import javax.json.JsonValue;
 import pr.http.HttpSessionClient;
 
 public class JokersUploader {
+    private static final String TEST_ACC_ID = "68ac2854f60b95ed625d6f22";
+    private static final String BG_ACC_ID = "68a16d928aa2132d2989b03d";
+    private static final String GLOBAL_ACC_ID = BG_ACC_ID;
+
+    private static final int VERSION_MAIN = 0, VERSION_SUB = 55;
+    private static final String BASE_URL = "https://pr-home-beryl.vercel.app";
+
     /**
      * set to false in production!
      */
-    private static final boolean MANUAL_COOKIE_OVERRIDE = true;
-    private static final String GLOBAL_ACC_ID = "68ac2854f60b95ed625d6f22";
+    private static final boolean MANUAL_COOKIE_OVERRIDE = !BASE_URL.startsWith("https");
     private final HttpSessionClient client = new HttpSessionClient(MANUAL_COOKIE_OVERRIDE);
-
-    private static final int VERSION_MAIN = 0, VERSION_SUB = 20;
 
     public JokersUploader() throws IOException, InterruptedException {
         var builder = addVersion(Json.createObjectBuilder()
@@ -29,15 +33,7 @@ public class JokersUploader {
                         .add("passwd", "a")
                         .add("force", true)));
 
-        // String json = """
-        // {
-        // "type": "login",
-        // "req": { "email": "peter.reitinger@gmail.com", "passwd": "a", "force": true
-        // },
-        // "version": { "main": 0, "sub": 20 }
-        // }
-        // """;
-        var resp = client.postJson("http://localhost:3001/api/countRolls/myUser", builder.build().toString());
+        var resp = client.postJson(BASE_URL + "/api/countRolls/myUser", builder.build().toString());
         System.out.println("resp: " + resp);
         var reader = Json.createReader(new StringReader(resp));
         
@@ -61,7 +57,7 @@ public class JokersUploader {
     public void send(String player1, String player2, AllJokers jokers1, AllJokers jokers2)
             throws IOException, InterruptedException {
 
-        client.postJson("http://localhost:3001/api/countJokers/upload",
+        client.postJson(BASE_URL + "/api/countJokers/upload",
                 jokerUploadRequest(GLOBAL_ACC_ID, player1, player2, jokers1, jokers2));
     }
 
@@ -85,11 +81,8 @@ public class JokersUploader {
     }
 
     private static JsonObjectBuilder addVersion(JsonObjectBuilder b) {
-        b.add("version", Json.createObjectBuilder().add("main", 0).add("sub", 20));
+        b.add("version", Json.createObjectBuilder().add("main", VERSION_MAIN).add("sub", VERSION_SUB));
         return b;
     }
 
-    private void sendLogin() {
-
-    }
 }

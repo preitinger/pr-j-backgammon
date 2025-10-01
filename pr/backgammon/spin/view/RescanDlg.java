@@ -22,6 +22,7 @@ public class RescanDlg extends JDialog {
         setLayout(new BorderLayout(15, 15));
         add(south, BorderLayout.SOUTH);
         JTextArea ta = new JTextArea("Es muss wieder mit dem Spin-Browser synchronisiert werden. Dazu bitte manuell weiter spielen um folgende Situation herzustellen:");
+        ta.setEditable(false);
         ta.setLineWrap(true);
         ta.setWrapStyleWord(true);
         add(ta, BorderLayout.CENTER);

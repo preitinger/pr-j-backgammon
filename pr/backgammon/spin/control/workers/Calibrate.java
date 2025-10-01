@@ -32,7 +32,7 @@ public abstract class Calibrate extends MyWorker<CalibrateRes, Void> {
             res.error = "Button Spiel anlegen nicht gefunden!";
             return res;
         }
-        if (!s.enterWhite.runAndClick(500)) {
+        if (!s.enterWhite.runAndClick(1000)) {
             res.error = "Button enter white nicht gefunden!";
             return res;
         }

@@ -1,7 +1,5 @@
 package pr.backgammon.control;
 
-import pr.model.MutableIntArray;
-
 public interface OwnMoveCb {
     /**
      * The match.ongoingMove can be used to mirror the move in the spin browser, and

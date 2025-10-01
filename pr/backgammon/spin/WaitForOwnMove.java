@@ -1,10 +1,5 @@
 package pr.backgammon.spin;
 
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
-
-import pr.backgammon.model.Roll;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.control.MyWorker;
 

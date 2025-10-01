@@ -1,0 +1,10 @@
+<html>
+
+    <body>
+        <h1>Ein paar analysierte Backgammon-Matches von mir auf spin.de</h1>
+        <ul>
+            ${MATCHES}
+        </ul>
+    </body>
+
+</html>

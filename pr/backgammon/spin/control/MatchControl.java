@@ -36,6 +36,7 @@ import pr.backgammon.gnubg.model.GSetTurn;
 import pr.backgammon.gnubg.model.GnuCmd;
 import pr.backgammon.jokers.control.AllJokers;
 import pr.backgammon.jokers.control.JokersUploader;
+import pr.backgammon.jokers.control.Utils;
 import pr.backgammon.model.Field;
 import pr.backgammon.model.Match;
 import pr.backgammon.model.Player;
@@ -98,7 +99,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         start = new MenuItem("Match starten", "start");
         roll = new MenuItem("Würfeln", "roll");
         doDouble = new MenuItem("Doppeln", "double");
-        reset = new MenuItem("Match zurücksetzen", "reset");
+        reset = new MenuItem("Match stoppen", "stop");
         accept = new MenuItem("Annehmen", "accept");
         reject = new MenuItem("Ablehnen (Eigenen Zug evtl. abschließen!)", "reject");
         rescan = new MenuItem("Rescan", "rescan");
@@ -187,10 +188,6 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
-
-                            StringBuilder sb = new StringBuilder("Initialer Wurf: ");
-                            result.match.roll.append(sb).append('\n');
-                            frame.appendText(sb.toString());
                             match.set(result.match);
 
                             frame.setAutoroll(autoroll = true);
@@ -202,30 +199,39 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                             matchView.setClockwise(!cal.ownWhite);
                             matchView.setMatch(match, workerState.ongoingMove);
 
-                            if (result.match.active == 1 - match.own) {
-                                addCmd(new GSetTurn(0));
-                                addCmd(new GSetDice(match.roll.die1, match.roll.die2));
-                                oppMove();
-                            } else if (result.match.active == match.own) {
-                                addCmd(new GSetTurn(1));
-                                addCmd(new GSetDice(match.roll.die1, match.roll.die2));
-                                ownMove();
+                            if (match.active == -1) {
+                                // Rescan notwendig
+                                JOptionPane.showMessageDialog(frame, "Rescan notwendig, da Match!");
+                                menu.setItems(rescan, reset);
                             } else {
-                                throw new IllegalStateException(
-                                        "match.active unexpected during initial roll: " + match.active);
+
+                                StringBuilder sb = new StringBuilder("Initialer Wurf: ");
+                                result.match.roll.append(sb).append('\n');
+                                frame.appendText(sb.toString());
+
+                                if (result.match.active == 1 - match.own) {
+                                    addCmd(new GSetTurn(0));
+                                    addCmd(new GSetDice(match.roll.die1, match.roll.die2));
+                                    oppMove();
+                                } else if (result.match.active == match.own) {
+                                    addCmd(new GSetTurn(1));
+                                    addCmd(new GSetDice(match.roll.die1, match.roll.die2));
+                                    ownMove();
+                                } else {
+                                    throw new IllegalStateException(
+                                            "match.active unexpected during initial roll: " + match.active);
+                                }
                             }
+
                         }
                     }
 
                 });
                 break;
-            case "reset":
-                if (runningWorker != null) {
-                    runningWorker.cancel(true);
-                }
-                matchView.setListener(null);
-                menu.setItems(start);
+            case "stop":
+                stopMatch();
                 break;
+
             case "accept":
                 if (ownPlayer().resign > 0) {
                     exeWorker(new ClickBoardButton(bs, bs.jaUnpressed) {
@@ -272,7 +278,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                                 addCmd(new GAccept());
                                 addCmd(new GSetTurn(1));
                                 menu.setItems(rescan, reset);
-                                clickOwnRoll();
+                                clickOwnRoll(false);
                             } else {
                                 // war normales take auf normales doppel vom gegner
                                 addCmd(new GAccept());
@@ -300,7 +306,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
 
                             if (match.active == match.own) {
                                 if (match.roll.isEmpty()) {
-                                    ownRoll();
+                                    ownRoll(false);
                                 } else {
                                     addCmd(new GSetDice(match.roll.die1, match.roll.die2));
                                     matchView.setMatch(match, workerState.ongoingMove);
@@ -349,7 +355,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             case "roll":
                 menu.setItems(rescan, reset);
                 if (match.active == match.own && match.roll.isEmpty()) {
-                    clickOwnRoll();
+                    clickOwnRoll(false);
                 }
                 break;
             case "double":
@@ -393,7 +399,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                                             // opp has taken
                                             System.out.println("opp has taken");
                                             addCmd(new GAccept());
-                                            clickOwnRoll();
+                                            clickOwnRoll(false);
                                         } else {
                                             // Opponent has dropped. New game, or because spin is allowing dead cubes,
                                             // end of the match
@@ -404,7 +410,9 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                                     }
                                 });
                             } else {
-                                ownRoll();
+                                System.out.println(
+                                        "Achtung! Klick auf den Doppel-Button konnte seltsamerweise nicht ausgefuehrt werden. Versuche eigenen Wurf...");
+                                ownRoll(false);
                             }
 
                         }
@@ -415,23 +423,42 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                 break;
 
             case "rescan":
-                workerState.ongoingMove.move.clear();
-                workerState.ongoingMove.hits.clear();
-                workerState.ongoingMove.highlightedPip = -1;
-                workerState.ongoingMove.hoveredField = -1;
-                matchView.setListener(null);
-
-                if (runningWorker != null) {
-                    runningWorker.cancel(true);
-                }
-
-                handsOffCount = 0;
 
                 int oldCommands = commands.size();
                 new Rescan(this.commands, match, frame, bs, spinRolls, new RescanCb() {
                     @Override
+                    public void onOk() {
+                        workerState.ongoingMove.move.clear();
+                        workerState.ongoingMove.hits.clear();
+                        workerState.ongoingMove.highlightedPip = -1;
+                        workerState.ongoingMove.hoveredField = -1;
+                        matchView.setListener(null);
+
+                        if (runningWorker != null) {
+                            runningWorker.cancel(true);
+                            try {
+                                runningWorker.resultNow();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                try {
+                                    runningWorker.exceptionNow();
+                                } catch (Exception ex2) {
+                                    ex2.printStackTrace();
+                                }
+                            }
+                        }
+
+                        handsOffCount = 0;
+
+                    }
+
+                    @Override
                     public void canceled() {
                         frame.appendText("Rescan wurde abgebrochen.\n");
+                    }
+
+                    public void startWorker(pr.control.MyWorker<?, ?> worker) {
+                        exeWorker(worker);
                     }
 
                     @Override
@@ -468,6 +495,37 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                 ownResign(3);
                 break;
         }
+    }
+
+    private boolean stopMatch() {
+        if (match.active == -1) {
+            return true;
+        }
+
+        int option = JOptionPane.showOptionDialog(frame,
+                "Match beenden\n1 - Match beenden und Protokoll, Würfe und Joker speichern\n2 - Match abbrechen ohne Speichern\n3 - Match nicht beenden, weiter spielen",
+                "pr-j-backgammon", 2,
+                JOptionPane.QUESTION_MESSAGE, null,
+                new String[] { "1 - Match beenden und speichern",
+                        "2 - Match abbrechen ohne Speichern ", "3 - Weiter spielen" },
+                null);
+
+        if (option == 2) {
+            return false;
+        }
+        if (ownMove != null) {
+            ownMove.cancel();
+            ownMove = null;
+        }
+        if (runningWorker != null) {
+            runningWorker.cancel(true);
+        }
+        matchView.setListener(null);
+        if (option == 0) {
+            closeMatch();
+        }
+        menu.setItems(start);
+        return true;
     }
 
     private void ownResign(int val) {
@@ -582,13 +640,11 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     }
 
     private void oppMove() {
-        try {
-            throw new RuntimeException("just trace");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
         menu.setItems(rescan, reset);
-        oppJokers.count(match);
+
+        logShots("Gegnerische Schüsse:");
+
+        oppJokers.count(match, workerState.tmp);
         exeMatchWorker(new WaitForOppMove(cal, bs,
                 spinRolls) {
             @Override
@@ -635,7 +691,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                             // tanzt.
                             // System.out.println("match.roll was still empty and autoroll was " +
                             // match.autoroll);
-                            ownRoll();
+                            ownRoll(false);
                         } else {
                             System.out.println("roll is NOT empty");
                             addCmd(new GSetDice(match.roll.die1, match.roll.die2));
@@ -650,10 +706,12 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
 
     }
 
-    private void clickOwnRoll() {
-        exeMatchWorker(new ClickRoll(bs, spinRolls) {
+    private void clickOwnRoll(boolean waitUntilNoOwnRollVisible) {
+        System.out.println("start ClickRoll ...");
+        exeMatchWorker(new ClickRoll(bs, spinRolls, waitUntilNoOwnRollVisible) {
             @Override
             public void resultOnEventDispatchThread(Void result) {
+                System.out.println("ClickRoll done.");
                 matchView.setMatch(match, workerState.ongoingMove);
 
                 if (ownPlayer().resign > 0) {
@@ -666,21 +724,21 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         });
     }
 
-    private void ownRoll() {
+    private void ownRoll(boolean waitUntilNoOwnRollVisible) {
         if (match.active != match.own) {
             throw new IllegalStateException("Eigener Spieler nicht am Wurf!");
         }
 
         if (autoroll) {
             menu.setItems(rescan, reset);
-            clickOwnRoll();
+            clickOwnRoll(waitUntilNoOwnRollVisible);
         } else {
-            if (match.cube.used && (!match.crawfordRule || !match.crawfordRound) && match.cube.owner != 0
+            if (match.cube.used && (!match.crawfordRule || !match.crawfordRound) && match.cube.owner != 1 - match.own
                     && ownPlayer().score + match.cube.value < match.matchLen) {
                 menu.setItems(roll, doDouble, rescan, reset);
             } else {
                 menu.setItems(rescan, reset);
-                clickOwnRoll();
+                clickOwnRoll(waitUntilNoOwnRollVisible);
             }
 
         }
@@ -720,6 +778,56 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        match.active = -1; // to show that no match is running
+    }
+
+    private void logShots(String header) {
+        StringBuilder sb = new StringBuilder("\n").append(header).append("\n");
+
+        workerState.tmp.clear();
+        var shots = workerState.tmp.add();
+        int n;
+
+        shots.clear();
+        Utils.findDirectShots(match, shots);
+        n = shots.length();
+        for (int i = 0; i + 1 < n; i += 2) {
+            sb.append("Direkter Schuss: ").append(shots.at(i)).append('/').append(shots.at(i + 1)).append("*\n");
+        }
+
+        shots.clear();
+        Utils.findIndirectShots(match, shots);
+        n = shots.length();
+        for (int i = 0; i + 2 < n; i += 3) {
+            sb.append("Indirekter Schuss: ").append(shots.at(i)).append('/').append(shots.at(i + 1)).append('/')
+                    .append(shots.at(i + 2)).append("*\n");
+        }
+
+        shots.clear();
+        Utils.findShotsWithADouble(match, shots);
+        n = shots.length();
+        for (int i = 0; i + 3 < n;) {
+            int die = shots.at(i++);
+            int fromBar = shots.at(i++);
+            int from = shots.at(i++);
+            int to = shots.at(i++);
+            sb.append("Pasch-Schuss:");
+
+            for (int j = 0; j < fromBar; ++j) {
+                sb.append(" Bar/").append(25 - die);
+            }
+
+            sb.append(' ').append(from);
+
+            for (int pos = from - die; pos >= to; pos -= die) {
+                sb.append('/').append(pos);
+            }
+
+            sb.append("*\n");
+        }
+
+        frame.appendText(sb.toString());
     }
 
     private void ownMove() {
@@ -732,7 +840,9 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         }
 
         workerState.match.set(match);
-        ownJokers.count(match);
+        ownJokers.count(match, workerState.tmp);
+
+        logShots("Eigene Schüsse:");
 
         ownMove = new OwnMove(workerState, matchView, new OwnMoveCb() {
             @Override
@@ -781,6 +891,25 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                         }
 
                         if (match.closedOut(1 - match.own)) {
+                            // This is a situation where the behavior of the spin server is undefined.
+                            // There are the following possibilities:
+                            // a) The opponent cannot roll because he is closed out. Instead, we are
+                            // immediately on roll after
+                            // our last move.
+                            // b) The opponent can roll even though he is closed out. We see the opponent's
+                            // roll for
+                            // a split second and then we are on roll, again.
+                            // c) The opponent can roll and it is delayed because he has not set autoroll.
+
+                            // So what shall be done?
+                            // First of all, we must wait until the roll of our own last move has really
+                            // disappeared.
+                            // If an opp roll is visible, wait until it is invisible and then click for our
+                            // roll.
+                            // If no roll is visible, click only once, wait up to one second for our roll to
+                            // become visible.
+                            // If not visible after one second, click again and repeat.
+
                             // Skip opp roll and double in spin browser, because spin does not let him roll
                             // or double when
                             // closed out.
@@ -797,7 +926,8 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                             }
                             addCmd(new GMove(workerState.allMoves.at(0)));
                             Move.run(match, workerState.allMoves.at(0));
-                            ownRoll();
+
+                            ownRoll(true);
                         } else {
                             oppRollOrDouble();
                         }
@@ -1053,5 +1183,13 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
 
     private void debug(String msg) {
         frame.appendText(msg + "\n");
+    }
+
+    @Override
+    public void onClose() {
+        if (stopMatch()) {
+            System.out.println("gonna exit");
+            System.exit(0);
+        }
     }
 }

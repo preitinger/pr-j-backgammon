@@ -2,6 +2,8 @@ package pr.backgammon.jokers.control;
 
 import pr.backgammon.model.Field;
 import pr.backgammon.model.Match;
+import pr.model.MutableArray;
+import pr.model.MutableIntArray;
 
 public class DoubleFromBar extends BaseJoker {
     private final int die;
@@ -30,7 +32,7 @@ The negative case is otherwise.
     }
 
     @Override
-    public CheckResult check(Match m) {
+    public CheckResult check(Match m, MutableArray<MutableIntArray> tmp) {
         if (m.active == -1) {
             return CheckResult.NONE;
         }

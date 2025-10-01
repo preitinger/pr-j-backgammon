@@ -2,6 +2,8 @@ package pr.backgammon.jokers.control;
 
 import pr.backgammon.model.Field;
 import pr.backgammon.model.Match;
+import pr.model.MutableArray;
+import pr.model.MutableIntArray;
 
 public class Prime5FromBarEscape extends BaseJoker {
 
@@ -26,7 +28,7 @@ public class Prime5FromBarEscape extends BaseJoker {
     }
 
     @Override
-    public CheckResult check(Match m) {
+    public CheckResult check(Match m, MutableArray<MutableIntArray> tmp) {
         if (m.active == -1) {
             return CheckResult.NONE;
         }

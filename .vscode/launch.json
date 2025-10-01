@@ -1,0 +1,58 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Test",
+            "request": "launch",
+            "mainClass": "pr.backgammon.Test",
+            "projectName": "pr-j-backgammon_b619b38e"
+        },
+        {
+            "type": "java",
+            "name": "AnalyzeMatch",
+            "request": "launch",
+            "mainClass": "pr.backgammon.control.AnalyzeMatch",
+            "projectName": "pr-j-backgammon_b619b38e",
+            "args": ""
+        },
+        {
+            "type": "java",
+            "name": "Prime5FromBarEscape",
+            "request": "launch",
+            "mainClass": "pr.backgammon.jokers.control.Prime5FromBarEscape",
+            "projectName": "pr-j-backgammon_b619b38e"
+        },
+        {
+            "type": "java",
+            "name": "WaitForOppMoveBug",
+            "request": "launch",
+            "mainClass": "pr.backgammon.spin.model.WaitForOppMoveBug",
+            "projectName": "pr-j-backgammon_b619b38e"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "pr.backgammon.spin.trackmove.Main",
+            "projectName": "pr-j-backgammon_b619b38e"
+        },
+        {
+            "type": "java",
+            "name": "Main(1)",
+            "request": "launch",
+            "mainClass": "pr.cutscreenshot.Main",
+            "projectName": "pr-j-backgammon_b619b38e"
+        }
+    ]
+}

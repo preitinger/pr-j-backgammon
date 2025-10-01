@@ -9,6 +9,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
@@ -25,6 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import pr.backgammon.control.AllMoves;
+import pr.backgammon.control.CreateIndexOfPublishedMatches;
 import pr.backgammon.control.Move;
 import pr.backgammon.control.OwnMove;
 import pr.backgammon.control.OwnMoveCb;
@@ -960,15 +962,16 @@ public class Test {
             var builder = Json.createObjectBuilder();
             var ownJokers = new AllJokers();
             var oppJokers = new AllJokers();
-            Match match = new Match();
+            var workerState = new WorkerState();
+            Match match = workerState.match;
             match.active = 0;
             match.roll.die1 = 4;
             match.roll.die2 = 4;
             match.getPlayer(0).name = "Test A";
             match.getPlayer(1).name = "Test B";
             match.getPlayer(0).field.set(25, 1);
-            ownJokers.count(match);
-            oppJokers.count(match);
+            ownJokers.count(match, workerState.tmp);
+            oppJokers.count(match, workerState.tmp);
             JsonArray ownJokersJson = ownJokers.toJson();
             JsonArray oppJokersJson = oppJokers.toJson();
             var json = jokerUploadRequest("68ac2854f60b95ed625d6f22", "Test A", "Test B", ownJokers, oppJokers);
@@ -996,6 +999,11 @@ public class Test {
 
     }
 
+    private static void testCreateIndexOfPublishedMatches() throws Exception {
+        var o = new CreateIndexOfPublishedMatches("../pr-home/public/gnubg");
+        o.run();
+    }
+
     public static void main(String[] args) throws Exception {
         // paintField1();
         // paint4OnOwnBar();
@@ -1020,6 +1028,7 @@ public class Test {
         // testBug20250917();
         // testSendJokers();
         // testJokersJson();
+        // testCreateIndexOfPublishedMatches();
     }
 
 }

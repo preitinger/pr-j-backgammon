@@ -128,7 +128,11 @@ public class Move {
             throw new IllegalArgumentException(tmpCondition);
         }
 
-        if (move.length() == 0 || isExtremeWaste(die1, die2, move)) {
+        /**
+         * Actually, isExtremeWaste is always a special case of isBearoff or in other words: from isExtremeWaste(die1, die2, move) follows always isBearoff(die1, die2, move)
+         * So, as optimization isExtremeWaste is removed
+         */
+        if (move.length() == 0 /* || isExtremeWaste(die1, die2, move) */ || isBearoff(die1, die2, move)) {
             out.set(move);
             return;
         }
@@ -263,6 +267,17 @@ public class Move {
     public static boolean isExtremeWaste(int die1, int die2, /* readonly */ MutableIntArray move) {
         int from = move.at(0);
         return move.length() == 2 && (from <= die1 || from <= die2);
+    }
+
+    public static boolean isBearoff(int die1, int die2, /* readonly */ MutableIntArray move) {
+        int n = move.length();
+        for (int i = 1; i < n; i += 2) {
+            if (move.at(i) == 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // public static boolean tryChain()

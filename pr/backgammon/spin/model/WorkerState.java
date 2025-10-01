@@ -28,7 +28,7 @@ public class WorkerState implements Mutable<WorkerState> {
     public final MutableArray<MutableIntArray> tmp = new MutableArray<>(1) {
         @Override
         protected MutableIntArray createInstance() {
-            return new MutableIntArray(8);
+            return new MutableIntArray(1024);
         }
     };
     /**
