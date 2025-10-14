@@ -9,21 +9,24 @@ import pr.backgammon.model.Match;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.CalibrationForSpin;
 import pr.backgammon.spin.control.FastChequerSearch;
+import pr.backgammon.spin.control.TemplateSearchers;
 
 public class Worker extends SwingWorker<Void, Data> {
     private final CalibrationForSpin cal;
+    private final TemplateSearchers ts;
     private FastChequerSearch chequers = null;
     private Rectangle boardRect = null;
     private BoardSearchers bs = null;
     private Field ownField = new Field(), oppField = new Field(), lastOwnField = new Field(), lastOppField = new Field();
 
-    public Worker(CalibrationForSpin cal) {
+    public Worker(CalibrationForSpin cal, TemplateSearchers ts) {
         this.cal = cal;
+        this.ts = ts;
     }
 
     @Override
     protected Void doInBackground() throws Exception {
-        chequers = new FastChequerSearch(cal);
+        chequers = new FastChequerSearch(cal, ts);
         boardRect = chequers.boardScreenshotRect(null);
         bs = new BoardSearchers(cal, boardRect);
         // int num = 0;
@@ -37,7 +40,7 @@ public class Worker extends SwingWorker<Void, Data> {
             }
 
             var img = bs.boardShot();
-            chequers.init(img.getRaster());
+            chequers.init(img);
             chequers.getFields(ownField, oppField);
 
             if (!first && ownField.equals(lastOwnField) && oppField.equals(lastOppField)) {

@@ -1,9 +1,7 @@
 package pr.backgammon.spin;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
-import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -16,14 +14,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
@@ -33,20 +25,17 @@ import pr.backgammon.model.Match;
 import pr.backgammon.model.OngoingMove;
 import pr.backgammon.model.Roll;
 import pr.backgammon.spin.control.BoardSearchers;
-import pr.backgammon.spin.control.BoardSearchers.ResignResponse;
 import pr.backgammon.spin.control.CalibrationForSpin;
 import pr.backgammon.spin.control.CalibrationForSpin.Chequer;
 import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.Rolls;
 import pr.backgammon.spin.control.SpinRolls;
 import pr.backgammon.spin.control.workers.ChatTextViaClipboard;
-import pr.backgammon.spin.control.workers.ReadPlayerNames;
 import pr.backgammon.spin.view.AllMovesPanel;
 import pr.backgammon.spin.view.ScreenshotDialog;
 import pr.backgammon.spin.view.SpinTrackFrame;
 import pr.backgammon.view.MatchView;
 import pr.control.MyRobot;
-import pr.control.Searcher;
 import pr.model.MutableArray;
 import pr.model.MutableIntArray;
 
@@ -110,7 +99,7 @@ public class SpinTracking implements SpinTrackFrame.Listener {
                 } else {
                     calBlack = cal;
                 }
-                fastChequerSearch = new FastChequerSearch(cal);
+                // fastChequerSearch = new FastChequerSearch(cal, ts);
                 rolls = new Rolls(cal); // TODO ggf. ersetzen
                 fastChequerSearch.boardScreenshotRect(tmpRect);
                 searchers = new BoardSearchers(cal, tmpRect);
@@ -375,7 +364,7 @@ public class SpinTracking implements SpinTrackFrame.Listener {
 
     private void setCalibration(CalibrationForSpin newCal) throws IOException {
         this.cal = newCal;
-        fastChequerSearch = new FastChequerSearch(cal);
+        // fastChequerSearch = new FastChequerSearch(cal);
         rolls = new Rolls(cal); // TODO ggf. ersetzen
         fastChequerSearch.boardScreenshotRect(tmpRect);
         searchers = new BoardSearchers(cal, tmpRect);
@@ -384,38 +373,39 @@ public class SpinTracking implements SpinTrackFrame.Listener {
     }
 
     private void fastScanField() {
-        fastChequerSearch.boardScreenshotRect(tmpRect);
-        BufferedImage board = MyRobot.shot(tmpRect);
-        Raster boardRaster = board.getRaster();
-        fastChequerSearch.init(boardRaster);
-        int[] a = new int[26 * 2];
-        for (int field = 24; field >= 1; --field) {
-            pr.backgammon.spin.model.Player player = fastChequerSearch.playerOnField(field);
-            a[field * 2] = field;
-            a[field * 2 + 1] = fastChequerSearch.numChequersOnField(field)
-                    * (player == pr.backgammon.spin.model.Player.OTHER ? -1 : 1);
-        }
-        a[25 * 2] = 25;
-        int[] chequersOnBar = fastChequerSearch.chequersOnBars(null);
-        a[25 * 2 + 1] = chequersOnBar[0]; // own chequers positive at 0
-        a[0] = 0;
-        a[0 + 1] = -chequersOnBar[1]; // opp chequers positive at 1
+        throw new UnsupportedOperationException();
+        // fastChequerSearch.boardScreenshotRect(tmpRect);
+        // BufferedImage board = MyRobot.shot(tmpRect);
+        // Raster boardRaster = board.getRaster();
+        // fastChequerSearch.init(board);
+        // int[] a = new int[26 * 2];
+        // for (int field = 24; field >= 1; --field) {
+        //     pr.backgammon.spin.model.Player player = fastChequerSearch.playerOnField(field);
+        //     a[field * 2] = field;
+        //     a[field * 2 + 1] = fastChequerSearch.numChequersOnField(field)
+        //             * (player == pr.backgammon.spin.model.Player.OTHER ? -1 : 1);
+        // }
+        // a[25 * 2] = 25;
+        // int[] chequersOnBar = fastChequerSearch.chequersOnBars(null);
+        // a[25 * 2 + 1] = chequersOnBar[0]; // own chequers positive at 0
+        // a[0] = 0;
+        // a[0 + 1] = -chequersOnBar[1]; // opp chequers positive at 1
 
-        // rolls noch nicht endgueltig vorerst zum testen beibehalten aus scanField():
-        // rolls.detectDiceFromFullScreenshot(captureScreen()); // dies natuerlich
-        // ineffizient, da hier neuer kompletter
-        // // screenshot gemacht wird.
-        spinRolls.detectFromBoardShot(boardRaster);
-        spinRolls.dump();
-        Roll initialRoll = null, oppRoll = null, ownRoll = null;
-        if (spinRolls.isInitialDice()) {
-            initialRoll = new Roll(spinRolls.die1(), spinRolls.die2());
-        } else if (spinRolls.isOppDice()) {
-            oppRoll = new Roll(spinRolls.die1(), spinRolls.die2());
-        } else if (spinRolls.isOwnDice()) {
-            ownRoll = new Roll(spinRolls.die1(), spinRolls.die2());
-        }
-        this.match.debug(a, initialRoll, oppRoll, ownRoll, 1, false); // TODO cube noch nicht erkannt - auch hier nur
+        // // rolls noch nicht endgueltig vorerst zum testen beibehalten aus scanField():
+        // // rolls.detectDiceFromFullScreenshot(captureScreen()); // dies natuerlich
+        // // ineffizient, da hier neuer kompletter
+        // // // screenshot gemacht wird.
+        // spinRolls.detectFromBoardShot(board);
+        // spinRolls.dump();
+        // Roll initialRoll = null, oppRoll = null, ownRoll = null;
+        // if (spinRolls.isInitialDice()) {
+        //     initialRoll = new Roll(spinRolls.die1(), spinRolls.die2());
+        // } else if (spinRolls.isOppDice()) {
+        //     oppRoll = new Roll(spinRolls.die1(), spinRolls.die2());
+        // } else if (spinRolls.isOwnDice()) {
+        //     ownRoll = new Roll(spinRolls.die1(), spinRolls.die2());
+        // }
+        // this.match.debug(a, initialRoll, oppRoll, ownRoll, 1, false); // TODO cube noch nicht erkannt - auch hier nur
                                                                       // ein test
 
     }
@@ -496,286 +486,286 @@ public class SpinTracking implements SpinTrackFrame.Listener {
         debugReadPlayerNames();
     }
 
-    @SuppressWarnings("unused")
-    private void debugBereit() {
-        try {
-            if (fastChequerSearch == null) {
-                System.out.println("not yet calibrated!");
-                return;
-            }
-            Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
-            BufferedImage boardImg = MyRobot.shot(boardRect);
-            Point found = searchers.bereit.run(boardImg.getRaster());
-            System.out.println("bereit found: " + found);
+    // @SuppressWarnings("unused")
+    // private void debugBereit() {
+    //     try {
+    //         if (fastChequerSearch == null) {
+    //             System.out.println("not yet calibrated!");
+    //             return;
+    //         }
+    //         Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
+    //         BufferedImage boardImg = MyRobot.shot(boardRect);
+    //         Point found = searchers.bereit.run(boardImg.getRaster());
+    //         System.out.println("bereit found: " + found);
 
-            if (found != null) {
-                MyRobot.move(boardRect.x + found.x, boardRect.y + found.y);
-            }
+    //         if (found != null) {
+    //             MyRobot.move(boardRect.x + found.x, boardRect.y + found.y);
+    //         }
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
 
-    }
+    // }
 
-    @SuppressWarnings("unused")
-    private void debugDlgCorner() {
-        try {
-            if (fastChequerSearch == null) {
-                System.out.println("not yet calibrated!");
-                return;
-            }
-            Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
-            BufferedImage boardImg = MyRobot.shot(boardRect);
-            Point found = searchers.dlgCorner.run(boardImg.getRaster());
-            System.out.println("dlgCorner found: " + found);
+    // @SuppressWarnings("unused")
+    // private void debugDlgCorner() {
+    //     try {
+    //         if (fastChequerSearch == null) {
+    //             System.out.println("not yet calibrated!");
+    //             return;
+    //         }
+    //         Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
+    //         BufferedImage boardImg = MyRobot.shot(boardRect);
+    //         Point found = searchers.dlgCorner.run(boardImg.getRaster());
+    //         System.out.println("dlgCorner found: " + found);
 
-            if (found != null) {
-                MyRobot.move(boardRect.x + found.x, boardRect.y + found.y);
-            }
+    //         if (found != null) {
+    //             MyRobot.move(boardRect.x + found.x, boardRect.y + found.y);
+    //         }
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
 
-    }
+    // }
 
-    @SuppressWarnings("unused")
-    private void debugResignAny() {
-        try {
-            if (fastChequerSearch == null) {
-                JOptionPane.showMessageDialog(frame, "Not calibrated!");
-                System.out.println("not yet calibrated!");
-                return;
-            }
-            Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
+    // @SuppressWarnings("unused")
+    // private void debugResignAny() {
+    //     try {
+    //         if (fastChequerSearch == null) {
+    //             JOptionPane.showMessageDialog(frame, "Not calibrated!");
+    //             System.out.println("not yet calibrated!");
+    //             return;
+    //         }
+    //         Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
 
-            // Vor dem Screenshot dem Tester Zeit geben, um den "Einfach Button" gedrueckt
-            // zu halten:
+    //         // Vor dem Screenshot dem Tester Zeit geben, um den "Einfach Button" gedrueckt
+    //         // zu halten:
 
-            Timer timer = new Timer(2000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    BufferedImage boardImg = MyRobot.shot(boardRect);
-                    Raster boardRaster = boardImg.getRaster();
-                    StringBuilder sb = new StringBuilder();
-                    Point found;
+    //         Timer timer = new Timer(2000, new ActionListener() {
+    //             @Override
+    //             public void actionPerformed(ActionEvent e) {
+    //                 BufferedImage boardImg = MyRobot.shot(boardRect);
+    //                 Raster boardRaster = boardImg.getRaster();
+    //                 StringBuilder sb = new StringBuilder();
+    //                 Point found;
 
-                    found = searchers.dlgCorner.run(boardRaster);
-                    sb.append("dlgCorner found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.dlgCorner.run(boardRaster);
+    //                 sb.append("dlgCorner found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOwn1.run(boardRaster);
-                    sb.append("resignFromOwn1 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOwn1.run(boardRaster);
+    //                 sb.append("resignFromOwn1 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOwn2.run(boardRaster);
-                    sb.append("resignFromOwn2 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOwn2.run(boardRaster);
+    //                 sb.append("resignFromOwn2 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOwn3.run(boardRaster);
-                    sb.append("resignFromOwn3 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOwn3.run(boardRaster);
+    //                 sb.append("resignFromOwn3 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOpp1.run(boardRaster);
-                    sb.append("resignFromOpp1 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOpp1.run(boardRaster);
+    //                 sb.append("resignFromOpp1 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOpp2.run(boardRaster);
-                    sb.append("resignFromOpp2 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOpp2.run(boardRaster);
+    //                 sb.append("resignFromOpp2 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.resignFromOpp3.run(boardRaster);
-                    sb.append("resignFromOpp3 found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.resignFromOpp3.run(boardRaster);
+    //                 sb.append("resignFromOpp3 found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.ja.run(boardRaster);
-                    sb.append("ja found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.ja.run(boardRaster);
+    //                 sb.append("ja found: " + found);
+    //                 sb.append('\n');
 
-                    found = searchers.nein.run(boardRaster);
-                    sb.append("nein found: " + found);
-                    sb.append('\n');
+    //                 found = searchers.nein.run(boardRaster);
+    //                 sb.append("nein found: " + found);
+    //                 sb.append('\n');
 
-                    JOptionPane.showMessageDialog(frame, sb.toString());
-                    // if (found != null) {
-                    // r.mouseMove(boardRect.x + found.x, boardRect.y + found.y);
-                    // }
+    //                 JOptionPane.showMessageDialog(frame, sb.toString());
+    //                 // if (found != null) {
+    //                 // r.mouseMove(boardRect.x + found.x, boardRect.y + found.y);
+    //                 // }
 
-                }
-            });
-            timer.setRepeats(false);
-            timer.start();
+    //             }
+    //         });
+    //         timer.setRepeats(false);
+    //         timer.start();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
 
-    }
+    // }
 
-    @SuppressWarnings("unused")
-    private void debugSearchAll() {
-        try {
-            if (fastChequerSearch == null) {
-                JOptionPane.showMessageDialog(frame, "Not calibrated!");
-                System.out.println("not yet calibrated!");
-                return;
-            }
-            Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
+    // @SuppressWarnings("unused")
+    // private void debugSearchAll() {
+    //     try {
+    //         if (fastChequerSearch == null) {
+    //             JOptionPane.showMessageDialog(frame, "Not calibrated!");
+    //             System.out.println("not yet calibrated!");
+    //             return;
+    //         }
+    //         Rectangle boardRect = fastChequerSearch.boardScreenshotRect(null);
 
-            // Vor dem Screenshot dem Tester Zeit geben, um den "Einfach Button" gedrueckt
-            // zu halten:
+    //         // Vor dem Screenshot dem Tester Zeit geben, um den "Einfach Button" gedrueckt
+    //         // zu halten:
 
-            Timer timer = new Timer(2000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    BufferedImage boardImg = MyRobot.shot(boardRect);
-                    Raster boardRaster = boardImg.getRaster();
-                    StringBuilder sb = new StringBuilder();
-                    Point found;
+    //         Timer timer = new Timer(2000, new ActionListener() {
+    //             @Override
+    //             public void actionPerformed(ActionEvent e) {
+    //                 BufferedImage boardImg = MyRobot.shot(boardRect);
+    //                 Raster boardRaster = boardImg.getRaster();
+    //                 StringBuilder sb = new StringBuilder();
+    //                 Point found;
 
-                    Searcher[] allSearchers = {
-                            searchers.annehmen,
-                            searchers.aufgeben,
-                            searchers.bereit,
-                            searchers.dlgCorner,
-                            searchers.ja,
-                            searchers.nein,
-                            searchers.resignFromOpp1,
-                            searchers.resignFromOpp2,
-                            searchers.resignFromOpp3,
-                            searchers.resignFromOwn1,
-                            searchers.resignFromOwn2,
-                            searchers.resignFromOwn3,
-                            searchers.verdoppeln,
+    //                 Searcher[] allSearchers = {
+    //                         searchers.annehmen,
+    //                         searchers.aufgeben,
+    //                         searchers.bereit,
+    //                         searchers.dlgCorner,
+    //                         searchers.ja,
+    //                         searchers.nein,
+    //                         searchers.resignFromOpp1,
+    //                         searchers.resignFromOpp2,
+    //                         searchers.resignFromOpp3,
+    //                         searchers.resignFromOwn1,
+    //                         searchers.resignFromOwn2,
+    //                         searchers.resignFromOwn3,
+    //                         searchers.verdoppeln,
 
-                            searchers.verdoppelnOpp,
-                            searchers.cube2,
-                            searchers.cube4,
-                            searchers.cube8,
-                            searchers.cube16,
-                            searchers.cube32,
-                    };
-                    String[] allNames = {
-                            "annehmen",
-                            "aufgeben",
-                            "bereit",
-                            "dlgCorner",
-                            "ja",
-                            "nein",
-                            "resignFromOpp1",
-                            "resignFromOpp2",
-                            "resignFromOpp3",
-                            "resignFromOwn1",
-                            "resignFromOwn2",
-                            "resignFromOwn3",
-                            "verdoppeln",
-                            "verdoppelnOpp",
-                            "cube2",
-                            "cube4",
-                            "cube8",
-                            "cube16",
-                            "cube32",
-                    };
+    //                         searchers.verdoppelnOpp,
+    //                         // searchers.cube2,
+    //                         // searchers.cube4,
+    //                         // searchers.cube8,
+    //                         // searchers.cube16,
+    //                         // searchers.cube32,
+    //                 };
+    //                 String[] allNames = {
+    //                         "annehmen",
+    //                         "aufgeben",
+    //                         "bereit",
+    //                         "dlgCorner",
+    //                         "ja",
+    //                         "nein",
+    //                         "resignFromOpp1",
+    //                         "resignFromOpp2",
+    //                         "resignFromOpp3",
+    //                         "resignFromOwn1",
+    //                         "resignFromOwn2",
+    //                         "resignFromOwn3",
+    //                         "verdoppeln",
+    //                         "verdoppelnOpp",
+    //                         // "cube2",
+    //                         // "cube4",
+    //                         // "cube8",
+    //                         // "cube16",
+    //                         // "cube32",
+    //                 };
 
-                    for (int i = 0; i < allSearchers.length; ++i) {
-                        Searcher s = allSearchers[i];
-                        String name = allNames[i];
-                        found = s.run(boardRaster);
-                        if (found != null)
-                            sb.append(name).append(" ").append(found.x).append(',').append(found.y).append('\n');
-                    }
+    //                 for (int i = 0; i < allSearchers.length; ++i) {
+    //                     Searcher s = allSearchers[i];
+    //                     String name = allNames[i];
+    //                     found = s.run(boardRaster);
+    //                     if (found != null)
+    //                         sb.append(name).append(" ").append(found.x).append(',').append(found.y).append('\n');
+    //                 }
 
-                    JOptionPane.showMessageDialog(frame, sb.toString());
-                    // if (found != null) {
-                    // r.mouseMove(boardRect.x + found.x, boardRect.y + found.y);
-                    // }
+    //                 JOptionPane.showMessageDialog(frame, sb.toString());
+    //                 // if (found != null) {
+    //                 // r.mouseMove(boardRect.x + found.x, boardRect.y + found.y);
+    //                 // }
 
-                }
-            });
-            timer.setRepeats(false);
-            timer.start();
+    //             }
+    //         });
+    //         timer.setRepeats(false);
+    //         timer.start();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
 
-    }
+    // }
 
     private Timer continuousSearchTimer = null;
-    private ContinuousSearchDlg continuousSearchDlg = null;
+    // private ContinuousSearchDlg continuousSearchDlg = null;
 
     // private BufferedWriter fileWriter;
     // private MatchWriter2 matchWriter;
 
-    @SuppressWarnings("unused")
-    private void debugToggleContinuousSearch() {
-        try {
-            if (continuousSearchTimer == null) {
-                // lazy
-                continuousSearchTimer = new Timer(10, new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        onContinuousSearch();
+    // @SuppressWarnings("unused")
+    // private void debugToggleContinuousSearch() {
+    //     try {
+    //         if (continuousSearchTimer == null) {
+    //             // lazy
+    //             continuousSearchTimer = new Timer(10, new ActionListener() {
+    //                 @Override
+    //                 public void actionPerformed(ActionEvent e) {
+    //                     onContinuousSearch();
 
-                    }
-                });
-            }
-            if (continuousSearchDlg == null) {
-                // lazy
-                continuousSearchDlg = new ContinuousSearchDlg(frame, searchers,
-                        fastChequerSearch.boardScreenshotRect(null));
-            }
-            if (continuousSearchTimer.isRunning()) {
-                continuousSearchTimer.stop();
-                continuousSearchDlg.setVisible(false);
-                System.out.println("continuous invisible");
-            } else {
-                continuousSearchDlg.setVisible(true);
-                continuousSearchTimer.start();
-                System.out.println("continuous visible");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
+    //                 }
+    //             });
+    //         }
+    //         if (continuousSearchDlg == null) {
+    //             // lazy
+    //             continuousSearchDlg = new ContinuousSearchDlg(frame, searchers,
+    //                     fastChequerSearch.boardScreenshotRect(null));
+    //         }
+    //         if (continuousSearchTimer.isRunning()) {
+    //             continuousSearchTimer.stop();
+    //             continuousSearchDlg.setVisible(false);
+    //             System.out.println("continuous invisible");
+    //         } else {
+    //             continuousSearchDlg.setVisible(true);
+    //             continuousSearchTimer.start();
+    //             System.out.println("continuous visible");
+    //         }
+    //     } catch (Exception ex) {
+    //         ex.printStackTrace();
+    //     }
+    // }
 
-    void onContinuousSearch() {
-        continuousSearchDlg.update();
-    }
+    // void onContinuousSearch() {
+    //     continuousSearchDlg.update();
+    // }
 
-    @SuppressWarnings("unused")
-    private void debugWaitForResignResponse() {
-        new Thread() {
-            String msg = null;
+    // @SuppressWarnings("unused")
+    // private void debugWaitForResignResponse() {
+    //     new Thread() {
+    //         String msg = null;
 
-            @Override
-            public void run() {
-                try {
-                    ResignResponse response = searchers.waitForResignResponse();
-                    switch (response) {
-                        case YES:
-                            msg = "Ja";
-                            break;
-                        case NO:
-                            msg = "Nein";
-                            break;
-                        case TOO_FAST:
-                            msg = "Zu schnell!";
-                            break;
-                    }
-                } catch (InterruptedException ex) {
-                    msg = "InterruptedException";
-                }
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        JOptionPane.showMessageDialog(frame, msg, "Resign Result", JOptionPane.INFORMATION_MESSAGE);
-                    }
-                });
-            }
-        }.start();
-    }
+    //         @Override
+    //         public void run() {
+    //             try {
+    //                 ResignResponse response = searchers.waitForResignResponse();
+    //                 switch (response) {
+    //                     case YES:
+    //                         msg = "Ja";
+    //                         break;
+    //                     case NO:
+    //                         msg = "Nein";
+    //                         break;
+    //                     case TOO_FAST:
+    //                         msg = "Zu schnell!";
+    //                         break;
+    //                 }
+    //             } catch (InterruptedException ex) {
+    //                 msg = "InterruptedException";
+    //             }
+    //             SwingUtilities.invokeLater(new Runnable() {
+    //                 @Override
+    //                 public void run() {
+    //                     JOptionPane.showMessageDialog(frame, msg, "Resign Result", JOptionPane.INFORMATION_MESSAGE);
+    //                 }
+    //             });
+    //         }
+    //     }.start();
+    // }
 
     // @SuppressWarnings("unused")
     // private void debugFirstAnalysis() {
@@ -863,13 +853,13 @@ public class SpinTracking implements SpinTrackFrame.Listener {
         }
         String[] playerNames = { null, null };
         Raster board = searchers.boardShot().getRaster();
-        (new ReadPlayerNames(searchers, board, playerNames) {
-            @Override
-            public void resultOnEventDispatchThread(Void result) {
-                JOptionPane.showMessageDialog(frame,
-                        "Look at System.out - name 0 '" + playerNames[0] + "'  name 1 '" + playerNames[1] + "'");
-            }
-        }).execute();
+        // (new ReadPlayerNames(searchers, board, playerNames) {
+        //     @Override
+        //     public void resultOnEventDispatchThread(Void result) {
+        //         JOptionPane.showMessageDialog(frame,
+        //                 "Look at System.out - name 0 '" + playerNames[0] + "'  name 1 '" + playerNames[1] + "'");
+        //     }
+        // }).execute();
     }
 
     private void appendText(String s) {
@@ -878,94 +868,94 @@ public class SpinTracking implements SpinTrackFrame.Listener {
 
 }
 
-class ContinuousSearchDlg extends JDialog {
-        final Searcher[] allSearchers;
-    final String[] allNames;
-    final JTextField[] results;
-    final Rectangle boardRect;
-    final JTextArea log;
+// class ContinuousSearchDlg extends JDialog {
+//         final Searcher[] allSearchers;
+//     final String[] allNames;
+//     final JTextField[] results;
+//     final Rectangle boardRect;
+//     final JTextArea log;
 
-    ContinuousSearchDlg(JFrame owner, BoardSearchers searchers, Rectangle boardRect) {
-        super(owner, "Continuous Search", ModalityType.DOCUMENT_MODAL);
-        this.allSearchers = new Searcher[] {
-                // searchers.annehmen, searchers.aufgeben, searchers.bereit,
+//     ContinuousSearchDlg(JFrame owner, BoardSearchers searchers, Rectangle boardRect) {
+//         super(owner, "Continuous Search", ModalityType.DOCUMENT_MODAL);
+//         this.allSearchers = new Searcher[] {
+//                 // searchers.annehmen, searchers.aufgeben, searchers.bereit,
 
-                searchers.dlgCorner,
-                searchers.ja,
-                searchers.nein,
+//                 searchers.dlgCorner,
+//                 searchers.ja,
+//                 searchers.nein,
 
-                // searchers.resignFromOpp1, searchers.resignFromOpp2,
-                // searchers.resignFromOpp3, searchers.resignFromOwn1, searchers.resignFromOwn2,
-                // searchers.resignFromOwn3,
-                // searchers.verdoppeln,
+//                 // searchers.resignFromOpp1, searchers.resignFromOpp2,
+//                 // searchers.resignFromOpp3, searchers.resignFromOwn1, searchers.resignFromOwn2,
+//                 // searchers.resignFromOwn3,
+//                 // searchers.verdoppeln,
 
-                // searchers.verdoppelnOpp, searchers.cube2, searchers.cube4, searchers.cube8,
-                // searchers.cube16,
-                // searchers.cube32,
+//                 // searchers.verdoppelnOpp, searchers.cube2, searchers.cube4, searchers.cube8,
+//                 // searchers.cube16,
+//                 // searchers.cube32,
 
-        };
-        this.allNames = new String[] {
-                // "annehmen",
-                // "aufgeben",
-                // "bereit",
+//         };
+//         this.allNames = new String[] {
+//                 // "annehmen",
+//                 // "aufgeben",
+//                 // "bereit",
 
-                "dlgCorner",
-                "ja",
-                "nein",
+//                 "dlgCorner",
+//                 "ja",
+//                 "nein",
 
-                // "resignFromOpp1",
-                // "resignFromOpp2",
-                // "resignFromOpp3",
-                // "resignFromOwn1",
-                // "resignFromOwn2",
-                // "resignFromOwn3",
-                // "verdoppeln",
-                // "verdoppelnOpp",
-                // "cube2",
-                // "cube4",
-                // "cube8",
-                // "cube16",
-                // "cube32",
-        };
+//                 // "resignFromOpp1",
+//                 // "resignFromOpp2",
+//                 // "resignFromOpp3",
+//                 // "resignFromOwn1",
+//                 // "resignFromOwn2",
+//                 // "resignFromOwn3",
+//                 // "verdoppeln",
+//                 // "verdoppelnOpp",
+//                 // "cube2",
+//                 // "cube4",
+//                 // "cube8",
+//                 // "cube16",
+//                 // "cube32",
+//         };
 
-        this.boardRect = boardRect;
+//         this.boardRect = boardRect;
 
-        setLayout(new BorderLayout());
-        JPanel grid = new JPanel(new GridLayout(0, 2));
+//         setLayout(new BorderLayout());
+//         JPanel grid = new JPanel(new GridLayout(0, 2));
 
-        results = new JTextField[allSearchers.length];
+//         results = new JTextField[allSearchers.length];
 
-        for (int i = 0; i < allSearchers.length; ++i) {
-            grid.add(new JLabel(allNames[i]));
-            grid.add(results[i] = new JTextField(20));
-        }
+//         for (int i = 0; i < allSearchers.length; ++i) {
+//             grid.add(new JLabel(allNames[i]));
+//             grid.add(results[i] = new JTextField(20));
+//         }
 
-        add(grid, BorderLayout.CENTER);
+//         add(grid, BorderLayout.CENTER);
 
-        log = new JTextArea();
-        JScrollPane sp = new JScrollPane(log);
-        sp.setPreferredSize(new Dimension(300, 300));
-        add(sp, BorderLayout.SOUTH);
-        pack();
-    }
+//         log = new JTextArea();
+//         JScrollPane sp = new JScrollPane(log);
+//         sp.setPreferredSize(new Dimension(300, 300));
+//         add(sp, BorderLayout.SOUTH);
+//         pack();
+//     }
 
-    void update() {
-        System.out.println("update");
-        BufferedImage boardImg = MyRobot.shot(boardRect);
-        Raster boardRaster = boardImg.getRaster();
-        StringBuilder sb = new StringBuilder();
+//     void update() {
+//         System.out.println("update");
+//         BufferedImage boardImg = MyRobot.shot(boardRect);
+//         Raster boardRaster = boardImg.getRaster();
+//         StringBuilder sb = new StringBuilder();
 
-        for (int i = 0; i < allSearchers.length; ++i) {
-            Point found = allSearchers[i].run(boardRaster);
-            String newText = found == null ? "" : found.x + "," + found.y;
-            if (!newText.equals(results[i].getText())) {
-                sb.append(allNames[i]).append(": ").append(newText).append('\n');
-            }
-            results[i].setText(newText);
-        }
+//         for (int i = 0; i < allSearchers.length; ++i) {
+//             Point found = allSearchers[i].run(boardRaster);
+//             String newText = found == null ? "" : found.x + "," + found.y;
+//             if (!newText.equals(results[i].getText())) {
+//                 sb.append(allNames[i]).append(": ").append(newText).append('\n');
+//             }
+//             results[i].setText(newText);
+//         }
 
-        if (sb.length() > 0) {
-            log.append(sb.append('\n').toString());
-        }
-    }
-}
+//         if (sb.length() > 0) {
+//             log.append(sb.append('\n').toString());
+//         }
+//     }
+// }

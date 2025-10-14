@@ -114,6 +114,78 @@ public class Move {
 
     }
 
+    /**
+     * An eventually aggregated move is split into valid single part moves, if
+     * necessary.
+     * If it is possible to split into an either hitting or non-hitting variant, the
+     * non-hitting variant is taken because this is the most intuitive case.
+     * If both variants are equally hitting or non-hitting, the smaller die is used
+     * first, then the bigger die.
+     * If move is invalid, also out will be invalid.
+     */
+    public static void split(int die1, int die2, MutableIntArray move, /* readonly */ Field otherField,
+            MutableIntArray out) {
+        out.clear();
+
+        int n = move.length();
+        int next = 0;
+
+        while (next < n) {
+            int from = move.at(next++);
+            int to = move.at(next++);
+            // { next pointing to move after from/to or to the end }
+
+            if (from - to < die1 + die2) {
+                // Unsplittable
+                out.add(from);
+                out.add(to);
+                continue;
+            }
+
+            if (die1 == die2) {
+                while (from - die1 > to) {
+                    out.add(from);
+                    from -= die1;
+                    out.add(from);
+                }
+
+                out.add(from);
+                out.add(to);
+                continue;
+            }
+
+            if (die1 > die2) {
+                int tmpDie = die1;
+                die1 = die2;
+                die2 = tmpDie;
+            }
+            // { die1 < die2 }
+            int mid1 = from - die1;
+            int mid2 = from - die2;
+            int other1 = otherField.getChequers(25 - mid1);
+            int other2 = otherField.getChequers(25 - mid2);
+            boolean possible1 = other1 <= 1;
+            boolean possible2 = other2 <= 1;
+            boolean hit1 = other1 == 1;
+            boolean hit2 = other2 == 1;
+            if (!possible1 || (possible2 && hit1 && !hit2)) {
+                // Bigger die first
+                out.add(from);
+                out.add(mid2);
+                out.add(mid2);
+                out.add(to);
+            } else {
+                // Smaller die first
+                out.add(from);
+                out.add(mid1);
+                out.add(mid1);
+                out.add(to);
+            }
+        }
+    }
+
+    // Actually specific for spin.de. So, should be moved into
+    // pr.backgammon.spin.control, or the like.
     public static void aggregate(int die1, int die2, /* readonly */MutableIntArray move,
             /* readonly */ Field otherField,
             MutableIntArray out, MutableArray<MutableIntArray> tmp) {
@@ -129,7 +201,9 @@ public class Move {
         }
 
         /**
-         * Actually, isExtremeWaste is always a special case of isBearoff or in other words: from isExtremeWaste(die1, die2, move) follows always isBearoff(die1, die2, move)
+         * Actually, isExtremeWaste is always a special case of isBearoff or in other
+         * words: from isExtremeWaste(die1, die2, move) follows always isBearoff(die1,
+         * die2, move)
          * So, as optimization isExtremeWaste is removed
          */
         if (move.length() == 0 /* || isExtremeWaste(die1, die2, move) */ || isBearoff(die1, die2, move)) {
@@ -137,13 +211,26 @@ public class Move {
             return;
         }
 
+        out.clear();
         var partMoves = tmp.at(0);
 
         {
             partMoves.clear();
             int n = (move.length() >> 1);
             for (int i = 0; i < n; ++i) {
-                partMoves.add(i);
+                if (i + 1 < n && move.at((i + 1) << 1) == 25) {
+                    // Spin.de does not allow bear-in moves to be aggregated. So actually this
+                    // function should be moved to the package pr.backgammon.spin
+                    // If here, the next part move also does bear-in a chequer. (Because of sorted
+                    // order, also this move.)
+                    // Then, we add this bear-in move directly to out because it must not be
+                    // aggregated.
+                    // Only, after all bear-ins have been done aggregation is allowed by spin.de
+                    out.add(move.at(i << 1));
+                    out.add(move.at((i << 1) + 1));
+                } else {
+                    partMoves.add(i);
+                }
             }
             partMoves.sort(new Comparator<Integer>() {
                 @Override
@@ -153,7 +240,6 @@ public class Move {
                 }
             });
         }
-        out.clear();
 
         int bigDie = die1;
         int smallDie = die2;
@@ -167,8 +253,10 @@ public class Move {
         out.add(toOfPartMove(move, partMoves, 0));
         removePartMove(partMoves, 0);
 
-        // out enthaelt nun genau den ersten Teilzug. Dieser wird geaendert, falls eine Verkettung moeglich ist.
-        // Falls nicht, wird der naechste Teilzug in out hinzugefuegt und mit diesem fortgefahren usw.
+        // out enthaelt nun genau den ersten Teilzug. Dieser wird geaendert, falls
+        // eine Verkettung moeglich ist.
+        // Falls nicht, wird der naechste Teilzug in out hinzugefuegt und mit diesem
+        // fortgefahren usw.
 
         while (0 < partMoves.length()) {
             // dump(partMoves, out);
@@ -187,7 +275,8 @@ public class Move {
 
             if (then != -1) {
                 // Extend out[out.length - 1] to the to field of partMoves[then].
-                // Remove partMoves[then] by copying partMoves[then + 1..partMoves.length() - 1] to
+                // Remove partMoves[then] by copying partMoves[then + 1..partMoves.length() - 1]
+                // to
                 // partMoves[then..partMoves.length() - 2] and removing the last.
                 out.set(out.length() - 1, toOfPartMove(move, partMoves, then));
                 removePartMove(partMoves, then);

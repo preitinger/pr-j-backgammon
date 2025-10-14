@@ -375,7 +375,7 @@ public class Match implements Mutable<Match> {
                 if (testBearoff) {
                     p.testBearoff();
                 } else {
-                    p.resetField();
+                    p.setInitialField();
                 }
                 p.resetResign();
             }
@@ -435,7 +435,7 @@ public class Match implements Mutable<Match> {
                 if (testBearoff) {
                     p.testBearoff();
                 } else {
-                    p.resetField();
+                    p.setInitialField();
                 }
                 p.resetResign();
             }

@@ -47,6 +47,27 @@ public class MutableIntArray implements Mutable<MutableIntArray> {
         vals[n++] = val;
     }
 
+    public void addAll(MutableIntArray toAdd) {
+        int n = toAdd.length();
+        for (int i = 0; i < n; ++i) {
+            vals[n++] = toAdd.vals[i];
+        }
+    }
+
+    public void addRange(MutableIntArray toAdd, int begin, int end) {
+        for (int i = begin; i < end; ++i) {
+            vals[n++] = toAdd.vals[i];
+        }
+    }
+
+    // Dies ist eher sogar langsamer als addRange, aber kaum messbar:
+    public void addRange2(MutableIntArray toAdd, int begin, int end) {
+        var valsToAdd = toAdd.vals;
+        for (int i = begin; i < end; ++i) {
+            vals[n++] = valsToAdd[i];
+        }
+    }
+
     public int removeLast() {
         if (n == 0)
             throw new IllegalStateException("Empty!");

@@ -1,12 +1,15 @@
 package pr.backgammon.spin.trackmove;
 
+import java.awt.Rectangle;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
 
 import pr.backgammon.spin.control.CalibrationForSpin;
+import pr.backgammon.spin.control.TemplateSearchers;
 
 public class Main {
     public static void main(String[] args) {
@@ -44,17 +47,21 @@ public class Main {
 
         data.clear();
 
-        worker = new Worker(cal) {
+        try {
+            worker = new Worker(cal, new TemplateSearchers(new Rectangle(0, 0, 1600, 1000))) {
 
-            @Override
-            protected void process(List<Data> chunks) {
-                System.out.println("chunks.size() " + chunks.size());
-                data.addAll(chunks);
-                view.setData(data);
-            }
+                @Override
+                protected void process(List<Data> chunks) {
+                    System.out.println("chunks.size() " + chunks.size());
+                    data.addAll(chunks);
+                    view.setData(data);
+                }
 
-        };
-        worker.execute();
+            };
+            worker.execute();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
     };
 

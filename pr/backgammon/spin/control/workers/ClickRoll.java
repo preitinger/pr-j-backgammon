@@ -1,12 +1,15 @@
 package pr.backgammon.spin.control.workers;
 
-import java.awt.image.Raster;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
 
 import pr.backgammon.model.Match;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.MatchWorker;
 import pr.backgammon.spin.control.SpinRolls;
+import pr.backgammon.spin.control.TemplateSearchers;
 import pr.control.MyRobot;
+import pr.control.TemplateSearcher;
 
 /**
  * Click to trigger the own roll and set the dice that the server rolls for us
@@ -14,17 +17,20 @@ import pr.control.MyRobot;
  */
 public abstract class ClickRoll extends MatchWorker<Void> {
     private final BoardSearchers bs;
+    private final TemplateSearchers ts;
     private final SpinRolls spinRolls;
     private final boolean withWaitUntilNoOwnRollVisible;
 
-    public ClickRoll(BoardSearchers bs, SpinRolls spinRolls, boolean withWaitUntilNoOwnRollVisible) {
+    public ClickRoll(BoardSearchers bs, TemplateSearchers ts, SpinRolls spinRolls, boolean withWaitUntilNoOwnRollVisible) {
         this.bs = bs;
+        this.ts = ts;
         this.spinRolls = spinRolls;
         this.withWaitUntilNoOwnRollVisible = withWaitUntilNoOwnRollVisible;
     }
 
     @Override
     public Void doIt() throws Exception {
+        System.out.println("\n***** CLICK ROLL\n");
         boolean dialogHandled;
 
         if (withWaitUntilNoOwnRollVisible) {
@@ -46,7 +52,8 @@ public abstract class ClickRoll extends MatchWorker<Void> {
 
             for (int i = 0; i < 40; ++i) {
                 Thread.sleep(100);
-                var board = bs.boardShot().getRaster();
+                var board = bs.boardShot();
+                // var boardRaster = board.getRaster();
                 if (handleDialog(board)) {
                     return null;
                 }
@@ -156,7 +163,8 @@ public abstract class ClickRoll extends MatchWorker<Void> {
         // Therefore, we wait here eventually until no own roll is visible.
 
         do {
-            var board = bs.boardShot().getRaster();
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
             if (handleDialog(board)) {
                 return true;
             }
@@ -177,7 +185,8 @@ public abstract class ClickRoll extends MatchWorker<Void> {
 
         do {
             Thread.sleep(100);
-            var board = bs.boardShot().getRaster();
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
             if (handleDialog(board)) {
                 return true;
             }
@@ -190,11 +199,22 @@ public abstract class ClickRoll extends MatchWorker<Void> {
         } while (true);
     }
 
-    private boolean handleDialog(Raster board) {
+    private Point pos;
+
+    private boolean visible(TemplateSearcher s, BufferedImage board) {
+        Point found = s.run(board, pos, false);
+        if (found != null) {
+            pos = found;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleDialog(BufferedImage board) {
         Match match = state.match;
 
-        if (bs.dlgCorner.run(board) != null) {
-            int resign = bs.searchOppResign(board);
+        if (visible(ts.dlgCorner, board)) {
+            int resign = ts.searchOppResign(board);
             if (resign > 0) {
                 match.offerResign(1 - match.own, resign);
                 return true;

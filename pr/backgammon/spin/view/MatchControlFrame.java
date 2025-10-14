@@ -114,6 +114,7 @@ public class MatchControlFrame extends JFrame {
         grid.insets().left(15);
         grid.insets().right(15);
         grid.insets().bottom(15);
+        grid.fill().both();
         grid.add(matchMenu);
 
         setContentPane(grid.asComponent());

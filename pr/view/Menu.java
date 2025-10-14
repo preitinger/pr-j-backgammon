@@ -25,18 +25,18 @@ public class Menu extends JScrollPane {
         this.listener = l;
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        Dimension size = panel.getPreferredSize();
-        size.width += 20;
-        size.height += 20;
-        return size;
-    }
+    // @Override
+    // public Dimension getPreferredSize() {
+    //     Dimension size = panel.getPreferredSize();
+    //     size.width += 20;
+    //     size.height += 20;
+    //     return size;
+    // }
 
-    @Override
-    public boolean isValidateRoot() {
-        return false; // weil getPreferredSize() vom Inhalt abhaengt
-    }
+    // @Override
+    // public boolean isValidateRoot() {
+    //     return false; // weil getPreferredSize() vom Inhalt abhaengt
+    // }
 
     @Override
     public Dimension getMinimumSize() {
@@ -54,6 +54,9 @@ public class Menu extends JScrollPane {
         }
 
         revalidate();
+        // validate();
+        
+        // repaint();
     }
 
     public void setItems(Iterable<MenuItem> items) {
@@ -62,6 +65,8 @@ public class Menu extends JScrollPane {
         for (MenuItem item : items) {
             add(item);
         }
+
+        revalidate();
     }
 
     public void add(MenuItem item) {
@@ -82,8 +87,8 @@ public class Menu extends JScrollPane {
 
     }
 
-    public void add(String label, String event) {
-    }
+    // public void add(String label, String event) {
+    // }
 
     public void clear() {
         panel.removeAll();

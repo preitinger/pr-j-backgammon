@@ -1,28 +1,35 @@
 package pr.backgammon.spin.control.workers;
 
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 
 import pr.backgammon.model.Match;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.MatchWorker;
-import pr.control.MyRobot;
+import pr.backgammon.spin.control.TemplateSearchers;
 
 public abstract class OwnResign extends MatchWorker<Void> {
     private final BoardSearchers bs;
+    private final TemplateSearchers ts;
     private final int resign;
-    private Raster board;
+    private BufferedImage board;
+    private Raster boardRaster;
     private FastChequerSearch chequers;
 
-    public OwnResign(BoardSearchers bs, int resign) {
+    public OwnResign(BoardSearchers bs, TemplateSearchers ts, int resign) {
         this.bs = bs;
-        chequers = new FastChequerSearch(bs.cal);
+        this.ts = ts;
+        chequers = new FastChequerSearch(bs.cal, ts);
         this.resign = resign;
     }
 
+    private Point pos;
+
     @Override
     public Void doIt() throws Exception {
+        System.out.println("\n***** OWN RESIGN\n");
         Match m = state.match;
         if (m.getPlayer(0).field.isInitial() && m.getPlayer(1).field.isInitial()) {
             throw new IllegalStateException("OwnResign darf nicht in der Initialposition ausgefuehrt werden!");
@@ -30,32 +37,27 @@ public abstract class OwnResign extends MatchWorker<Void> {
         m.offerResign(m.own, resign);
 
         Thread.sleep(200);
-        board = bs.boardShot().getRaster();
-        Point pos = bs.sideAufgeben.run(board);
-        if (pos == null) {
-            throw new IllegalStateException("Button Aufgeben nicht gefunden!");
-        }
-        MyRobot.click(bs.boardRect().x + pos.x + 18, bs.boardRect().y + pos.y + 13, 63 - 18, 25 - 13);
+        board = bs.boardShot()/* .getRaster() */;
+        boardRaster = board.getRaster();
+        ts.waitAndClick(bs, ts.bAufgeben);
+        // bs.sideAufgeben.runAndClick(boardRaster, bs.boardRect().x, bs.boardRect().y);
+        // MyRobot.click(bs.boardRect().x + pos.x + 18, bs.boardRect().y + pos.y + 13,
+        // 63 - 18, 25 - 13);
         System.out.println("Auf Aufgeben geklickt");
 
         Thread.sleep(300);
-        board = bs.boardShot().getRaster();
+        board = bs.boardShot();
+        boardRaster = board.getRaster();
 
         switch (resign) {
             case 1:
-                if (!bs.resignFromOwn1Unpressed.runAndClick(board, bs.boardRect().x, bs.boardRect().y)) {
-                    throw new IllegalStateException("Button Aufgabe einfach nicht gefunden!");
-                }
+                ts.waitAndClick(bs, ts.dlgResignFromOwn1);
                 break;
             case 2:
-                if (!bs.resignFromOwn2Unpressed.runAndClick(board, bs.boardRect().x, bs.boardRect().y)) {
-                    throw new IllegalStateException("Button Aufgabe Gammon nicht gefunden!");
-                }
+                ts.waitAndClick(bs, ts.dlgResignFromOwn2);
                 break;
             case 3:
-                if (!bs.resignFromOwn3Unpressed.runAndClick(board, bs.boardRect().x, bs.boardRect().y)) {
-                    throw new IllegalStateException("Button Aufgabe Backgammon nicht gefunden!");
-                }
+                ts.waitAndClick(bs, ts.dlgResignFromOwn3);
                 break;
             default:
                 throw new IllegalStateException("resign=" + resign);
@@ -65,7 +67,8 @@ public abstract class OwnResign extends MatchWorker<Void> {
 
         do {
             Thread.sleep(500);
-            board = bs.boardShot().getRaster();
+            board = bs.boardShot();
+            boardRaster = board.getRaster();
 
             // Fall 1 - initiales Brett und ein Wurf
             // bedeutet Aufgabe angenommen und Match noch nicht zuende
@@ -105,10 +108,15 @@ public abstract class OwnResign extends MatchWorker<Void> {
     }
 
     private boolean isLeaveButtonVisible() {
-        return bs.sideVerlassen.run(board) != null;
+        Point found = ts.bVerlassen.run(board, pos, false);
+        if (pos == null && found != null) {
+            pos = found;
+        }
+        return found != null;
     }
 
     private boolean isHasRejectedVisible() {
-        return bs.statusHasRejected.run(board) != null;
+        return ts.visible(ts.statusHasRejected, board);
+        // return bs.statusHasRejected.run(boardRaster) != null;
     }
 }

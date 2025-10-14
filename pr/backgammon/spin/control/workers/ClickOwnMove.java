@@ -17,6 +17,7 @@ public abstract class ClickOwnMove extends MyWorker<Void, Void> {
 
     @Override
     public Void doIt() throws Exception {
+        System.out.println("\n***** CLICK OWN MOVE\n");
         {
             // Achtung! Neues Prinzip: In Spin muss eigener Autowurf immer deaktiviert sein, damit WaitForOppMove & Co genug Zeit haben.
             SetAutoroll setAutoRoll = new SetAutoroll(bs, false) {

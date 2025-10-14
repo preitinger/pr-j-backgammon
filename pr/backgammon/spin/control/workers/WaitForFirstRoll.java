@@ -5,21 +5,25 @@ import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.MatchWorker;
 import pr.backgammon.spin.control.SpinRolls;
+import pr.backgammon.spin.control.TemplateSearchers;
 
 public abstract class WaitForFirstRoll extends MatchWorker<Void> {
     private final BoardSearchers bs;
+    private final TemplateSearchers ts;
     private final SpinRolls spinRolls;
 
-    public WaitForFirstRoll(BoardSearchers bs, SpinRolls spinRolls) {
+    public WaitForFirstRoll(BoardSearchers bs, TemplateSearchers ts, SpinRolls spinRolls) {
         this.bs = bs;
+        this.ts = ts;
         this.spinRolls = spinRolls;
 
     }
 
     @Override
     public Void doIt() throws Exception {
+        System.out.println("\n***** WAIT FOR FIRST ROLL\n");
         Match match = state.match;
-        FastChequerSearch chequers = new FastChequerSearch(bs.cal);
+        FastChequerSearch chequers = new FastChequerSearch(bs.cal, ts);
 
         if (match.active != -1) {
             throw new IllegalStateException("Shall wait for first roll in a new game, but active not -1?!");
@@ -28,10 +32,11 @@ public abstract class WaitForFirstRoll extends MatchWorker<Void> {
         do {
             Thread.sleep(100);
 
-            var board = bs.boardShot().getRaster();
-
-            if (bs.dlgCorner.run(board) != null) {
-                int resign = bs.searchOppResign(board);
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
+            
+            if (ts.visible(ts.dlgCorner, board)) {
+                int resign = ts.searchOppResign(board);
                 if (resign > 0) {
                     match.offerResign(1 - match.own, resign);
                     return null;
@@ -57,8 +62,8 @@ public abstract class WaitForFirstRoll extends MatchWorker<Void> {
                     // Then, we simply take a new shot.
                     continue;
                 }
-                if (/* state.newOpp.getChequers(0) > 0 || state.newOwn.getChequers(0) > 0 */ !(state.newOpp.isInitial()
-                        && state.newOwn.isInitial())) {
+                if (/* state.newOpp.getChequers(0) > 0 || state.newOwn.getChequers(0) > 0 */ !(/* state.newOpp.isInitial()
+                        && */ state.newOwn.isInitial())) {
                     System.out.println("Got an old board shot, continue in the loop...");
                     continue;
                 }
@@ -88,8 +93,9 @@ public abstract class WaitForFirstRoll extends MatchWorker<Void> {
                     // Then, we simply take a new shot.
                     continue;
                 }
-                if (/* state.newOpp.getChequers(0) > 0 || state.newOwn.getChequers(0) > 0 */ !(state.newOpp.isInitial()
-                        && state.newOwn.isInitial())) {
+                // Wenn Gegner Bot ist oder einfach so sehr schnell zieht, kann das gegnerische Brett ruhig nicht mehr initial sein. Hauptsache das eigene ist es.
+                if (/* state.newOpp.getChequers(0) > 0 || state.newOwn.getChequers(0) > 0 */ !(/* state.newOpp.isInitial()
+                        && */ state.newOwn.isInitial())) {
                     System.out.println("Got an old board shot, continue in the loop...");
                     continue;
                 }

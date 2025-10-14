@@ -39,9 +39,11 @@ public class DiceGeometrics {
 
         public void oppRoll(Rectangle resLeft, Rectangle resRight) {
             resLeft.x = cal.left + cal.dxLeft * 2 - cal.dxLeft / 2 - cal.dxLeft / 4 + cal.dxLeft / 32 ;
-            resLeft.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8;
+            // resLeft.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8;
+            resLeft.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8 - 5;
             resLeft.width = cal.dxLeft;
-            resLeft.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resLeft.y;
+            // resLeft.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resLeft.y;
+            resLeft.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resLeft.y + 10;
 
             resRight.x = cal.left + cal.dxLeft * 3 - 5 * cal.dxLeft / 16;
             resRight.width = cal.dxRight;
@@ -56,9 +58,11 @@ public class DiceGeometrics {
 
         public void ownRoll(Rectangle resLeft, Rectangle resRight) {
             resRight.x = cal.right - cal.dxRight * 2 + cal.dxRight / 2 + cal.dxRight / 4 - cal.dxRight / 32 - cal.dxRight ;
-            resRight.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8;
+            // resRight.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8;
+            resRight.y = cal.top + cal.dy * 5 - 2 * cal.dy / 8 - 5;
             resRight.width = cal.dxRight;
-            resRight.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resRight.y;
+            // resRight.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resRight.y;
+            resRight.height = cal.bottom - cal.dy * 5 + 2 * cal.dy / 8 - resRight.y + 10;
 
             resLeft.x = cal.right - cal.dxRight * 3 + 5 * cal.dxRight / 16 - cal.dxRight;
             resLeft.width = cal.dxRight;

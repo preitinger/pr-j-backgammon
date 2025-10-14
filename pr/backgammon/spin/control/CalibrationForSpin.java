@@ -10,7 +10,6 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +17,7 @@ import java.util.Comparator;
 import pr.backgammon.spin.model.Player;
 import pr.control.MyRobot;
 import pr.control.Tools;
+import pr.model.MutableIntArray;
 
 /*
  * Alternative Kalibrierung fuer Spin:
@@ -85,7 +85,8 @@ public class CalibrationForSpin {
         }
     }
 
-    public final BufferedImage[] blackChequer, whiteChequer;
+    // Abgeloest durch Kreissuche mit Hilfe von OpenCV:
+    // public final BufferedImage[] blackChequer, whiteChequer;
     // coordinates of the extreme chequer centers in the corners.
     public final int left, top, right, bottom;
     /**
@@ -101,6 +102,8 @@ public class CalibrationForSpin {
     public final boolean ownClockwise;
     public final int dxLeft, dxRight, dxBar;
     public final int dy;
+
+    private final float[] tmpFloats = new float[40 * 3];
 
     final Comparator<Chequer> sortX = new Comparator<Chequer>() {
         @Override
@@ -238,7 +241,7 @@ public class CalibrationForSpin {
     }
 
     static boolean yEqual(int yIs, int yShould) {
-        return yIs > yShould - 5 && yIs < yShould + 5;
+        return yIs > yShould - 8 && yIs < yShould + 8;
     }
 
     public int numChequersOnField(ArrayList<Chequer> allChequers, int field) {
@@ -404,71 +407,209 @@ public class CalibrationForSpin {
         }
     }
 
-    CalibrationForSpin(int left, int top, int right, int bottom,
-            boolean ownWhite, boolean ownClockwise, int dxLeft, int dxRight,
-            int dxBar,
-            int dy) throws IOException {
+    // CalibrationForSpin(int left, int top, int right, int bottom,
+    // boolean ownWhite, boolean ownClockwise, int dxLeft, int dxRight,
+    // int dxBar,
+    // int dy) throws IOException {
 
-        blackChequer = new BufferedImage[2];
-        blackChequer[0] = Tools.loadImg(new File("./blackChequer.png"));
-        // blackChequer[1] = loadImg(new File("./blackChequerStar.png"));
-        blackChequer[1] = Tools.loadImg(new File("./spin-black-star-cut-circle2.png"));
-        whiteChequer = new BufferedImage[2];
-        whiteChequer[0] = Tools.loadImg(new File("./whiteChequer.png"));
-        // whiteChequer[1] = loadImg(new File("./whiteChequerStar.png"));
-        whiteChequer[1] = Tools.loadImg(new File("./spin-white-star-cut-circle2.png")); // TODO geaendert von
-        // whiteChequerStar.png
+    // blackChequer = new BufferedImage[2];
+    // blackChequer[0] = Tools.loadImg(new File("./blackChequer.png"));
+    // // blackChequer[1] = loadImg(new File("./blackChequerStar.png"));
+    // blackChequer[1] = Tools.loadImg(new
+    // File("./spin-black-star-cut-circle2.png"));
+    // whiteChequer = new BufferedImage[2];
+    // whiteChequer[0] = Tools.loadImg(new File("./whiteChequer.png"));
+    // // whiteChequer[1] = loadImg(new File("./whiteChequerStar.png"));
+    // whiteChequer[1] = Tools.loadImg(new
+    // File("./spin-white-star-cut-circle2.png")); // TODO geaendert von
+    // // whiteChequerStar.png
 
-        this.left = left;
-        this.top = top;
-        this.right = right;
-        this.bottom = bottom;
-        this.ownWhite = ownWhite;
-        this.ownClockwise = ownClockwise;
-        this.dxLeft = dxLeft;
-        this.dxRight = dxRight;
-        this.dxBar = dxBar;
-        this.dy = dy;
-    }
+    // this.left = left;
+    // this.top = top;
+    // this.right = right;
+    // this.bottom = bottom;
+    // this.ownWhite = ownWhite;
+    // this.ownClockwise = ownClockwise;
+    // this.dxLeft = dxLeft;
+    // this.dxRight = dxRight;
+    // this.dxBar = dxBar;
+    // this.dy = dy;
+    // }
+
+    // public CalibrationForSpin(BufferedImage screen) throws IOException {
+    // if (screen == null) {
+    // screen = createScreenCapture();
+    // }
+
+    // blackChequer = new BufferedImage[2];
+    // // blackChequer[0] = Tools.loadImg(new File("res/blackChequer.png"));
+    // blackChequer[0] = Tools.loadImg("pr/res/blackChequer.png");
+    // blackChequer[1] = Tools.loadImg("pr/res/spin-black-star-cut-circle2.png");
+    // whiteChequer = new BufferedImage[2];
+    // whiteChequer[0] = Tools.loadImg("pr/res/whiteChequer.png");
+    // // whiteChequer[1] = loadImg(new File("./whiteChequerStar.png"));
+    // whiteChequer[1] = Tools.loadImg("pr/res/spin-white-star-cut-circle2.png"); //
+    // TODO geaendert von
+    // // whiteChequerStar.png
+    // ArrayList<Point> blackPositions = searchAllChequersOfColor(screen,
+    // blackChequer, 180000, 2100, null);
+    // ArrayList<Point> whitePositions = searchAllChequersOfColor(screen,
+    // whiteChequer, 180000, 200, null);
+    // removeNeighbours(blackPositions);
+    // removeNeighbours(whitePositions);
+    // System.out.println("whitePositions.size() " + whitePositions.size());
+    // System.out.println("blackPositions.size() " + blackPositions.size());
+    // ArrayList<Chequer> blackChequers = new ArrayList<>();
+    // ArrayList<Chequer> whiteChequers = new ArrayList<>();
+    // for (Point p : blackPositions) {
+    // blackChequers.add(new Chequer(ChequerColor.BLACK, p));
+    // System.out.println("black position: " + p);
+    // }
+    // for (Point p : whitePositions) {
+    // whiteChequers.add(new Chequer(ChequerColor.WHITE, p));
+    // System.out.println("white position: " + p);
+    // }
+    // ArrayList<Chequer> allChequers = new ArrayList<Chequer>(blackChequers);
+    // allChequers.addAll(whiteChequers);
+    // allChequers.sort(sortX);
+    // ArrayList<Point> sortedCenterX = new ArrayList<>();
+    // for (Chequer c : allChequers) {
+    // sortedCenterX.add(c.pos);
+    // }
+    // System.out.println("All occurring x coordinates");
+    // // dumpUniqueX(allChequers);
+    // int minX = allChequers.get(0).pos.x;
+    // int maxX = allChequers.get(allChequers.size() - 1).pos.x;
+    // allChequers.sort(sortY);
+    // System.out.println("All occurring y coordinates");
+    // // dumpUniqueY(allChequers);
+    // int minY = allChequers.get(0).pos.y;
+    // int maxY = allChequers.get(allChequers.size() - 1).pos.y;
+    // System.out.println("minX " + minX);
+    // System.out.println("maxX " + maxX);
+    // System.out.println("minY " + minY);
+    // System.out.println("maxY " + maxY);
+    // left = minX;
+    // top = minY;
+    // right = maxX;
+    // bottom = maxY;
+
+    // // Herausfinden, ob die eigenen 2 Steine in der oberen Haelfte links oder
+    // rechts
+    // // sind, und welche Farbe sie haben. Das Feld mit den eigenen 2 Steinen wird
+    // als
+    // // Feld 24 definiert,
+    // // das mit den gegnerischen 2 Steinen als Feld 1
+    // ArrayList<Chequer> topLeft = filterColumn(allChequers, left,
+    // true);
+    // // dump("chequers in top left field", topLeft);
+    // if (topLeft.size() == 2) {
+    // this.ownClockwise = true;
+    // if (topLeft.get(0).color == ChequerColor.BLACK) {
+    // if (topLeft.get(1).color != ChequerColor.BLACK)
+    // throw new IllegalStateException("different chequer colors in one field at
+    // start position?");
+    // this.ownWhite = false;
+    // } else {
+    // assert (topLeft.get(0).color == ChequerColor.WHITE && topLeft.get(2).color ==
+    // ChequerColor.WHITE);
+    // this.ownWhite = true;
+    // }
+    // } else {
+    // assert (topLeft.size() == 5);
+    // this.ownClockwise = false;
+    // if (topLeft.get(0).color == ChequerColor.BLACK) {
+    // if (topLeft.get(1).color != ChequerColor.BLACK)
+    // throw new IllegalStateException("different chequer colors in one field at
+    // start position?");
+    // this.ownWhite = false;
+    // } else {
+    // assert (topLeft.get(0).color == ChequerColor.WHITE && topLeft.get(2).color ==
+    // ChequerColor.WHITE);
+    // this.ownWhite = true;
+    // }
+    // }
+
+    // {
+    // ArrayList<Integer> filteredCenterX = new ArrayList<>();
+    // Point last = null;
+    // int n = 0;
+    // int sum = 0;
+    // for (Point p : sortedCenterX) {
+    // if (last == null) {
+    // sum = p.x;
+    // n = 1;
+    // last = p;
+    // } else {
+    // if (p.x > last.x + 10) {
+    // filteredCenterX.add((sum + (n >> 1)) / n);
+    // sum = p.x;
+    // n = 1;
+    // last = p;
+    // } else {
+    // sum += p.x;
+    // ++n;
+    // }
+    // }
+    // }
+    // if (n > 0) {
+    // filteredCenterX.add((sum + (n >> 1)) / n);
+    // }
+
+    // int x0 = filteredCenterX.get(0);
+    // int x1 = filteredCenterX.get(1);
+    // int x2 = filteredCenterX.get(2);
+    // int x3 = filteredCenterX.get(3);
+    // dump("x0", x0);
+    // dump("x1", x1);
+    // dump("x2", x2);
+    // dump("x3", x3);
+
+    // if (ownClockwise) {
+    // dxLeft = (x1 - x0 + 3) / 5;
+    // dxRight = (x3 - x2 + 2) / 4;
+    // dxBar = x2 - (3 * dxRight + dxLeft) / 2 - x1;
+    // } else {
+    // dxLeft = (filteredCenterX.get(1) - filteredCenterX.get(0) + 2) / 4;
+    // dxRight = (filteredCenterX.get(3) - filteredCenterX.get(2) + 3) / 5;
+    // dxBar = x2 - (3 * dxLeft + dxRight) / 2 - x1;
+    // }
+    // }
+
+    // {
+    // ArrayList<Chequer> chequersOn19 = visibleChequersOnField(allChequers, 19);
+    // if (chequersOn19.size() != 5)
+    // throw new IllegalStateException(chequersOn19.size() + " chequers on 19, not
+    // 5");
+    // chequersOn19.sort(sortY);
+    // dy = (chequersOn19.get(4).pos.y - chequersOn19.get(0).pos.y + 2) / 4;
+    // }
+
+    // System.out.println("\nComplete Calibration:");
+    // dump();
+    // System.out.println();
+
+    // }
 
     public CalibrationForSpin(BufferedImage screen) throws IOException {
-        if (screen == null) {
-            screen = createScreenCapture();
-        }
-
-        blackChequer = new BufferedImage[2];
-        // blackChequer[0] = Tools.loadImg(new File("res/blackChequer.png"));
-        blackChequer[0] = Tools.loadImg("pr/res/blackChequer.png");
-        blackChequer[1] = Tools.loadImg("pr/res/spin-black-star-cut-circle2.png");
-        whiteChequer = new BufferedImage[2];
-        whiteChequer[0] = Tools.loadImg("pr/res/whiteChequer.png");
-        // whiteChequer[1] = loadImg(new File("./whiteChequerStar.png"));
-        whiteChequer[1] = Tools.loadImg("pr/res/spin-white-star-cut-circle2.png"); // TODO geaendert von
-        // whiteChequerStar.png
-        ArrayList<Point> blackPositions = searchAllChequersOfColor(screen, blackChequer, null);
-        ArrayList<Point> whitePositions = searchAllChequersOfColor(screen, whiteChequer, null);
-        ArrayList<Chequer> blackChequers = new ArrayList<>();
-        ArrayList<Chequer> whiteChequers = new ArrayList<>();
-        for (Point p : blackPositions) {
-            blackChequers.add(new Chequer(ChequerColor.BLACK, p));
-        }
-        for (Point p : whitePositions) {
-            whiteChequers.add(new Chequer(ChequerColor.WHITE, p));
-        }
-        ArrayList<Chequer> allChequers = new ArrayList<Chequer>(blackChequers);
-        allChequers.addAll(whiteChequers);
+        ArrayList<Chequer> allChequers = searchAllVisibleChequers(screen);
         allChequers.sort(sortX);
+        // take only the 30 left-most chequers because if more these are the images
+        // aside
+        while (allChequers.size() > 30) {
+            allChequers.remove(allChequers.size() - 1);
+        }
         ArrayList<Point> sortedCenterX = new ArrayList<>();
         for (Chequer c : allChequers) {
             sortedCenterX.add(c.pos);
         }
         System.out.println("All occurring x coordinates");
-        dumpUniqueX(allChequers);
+        // dumpUniqueX(allChequers);
         int minX = allChequers.get(0).pos.x;
         int maxX = allChequers.get(allChequers.size() - 1).pos.x;
         allChequers.sort(sortY);
         System.out.println("All occurring y coordinates");
-        dumpUniqueY(allChequers);
+        // dumpUniqueY(allChequers);
         int minY = allChequers.get(0).pos.y;
         int maxY = allChequers.get(allChequers.size() - 1).pos.y;
         System.out.println("minX " + minX);
@@ -570,6 +711,29 @@ public class CalibrationForSpin {
 
     }
 
+    private static void removeNeighbours(ArrayList<Point> points) {
+        int n = points.size();
+        MutableIntArray neighbours = new MutableIntArray(16);
+
+        for (int i = 0; i < n; ++i) {
+            Point p = points.get(i);
+            neighbours.clear();
+            for (int j = i + 1; j < n; ++j) {
+                Point p2 = points.get(j);
+                if (Math.abs(p.x - p2.x) <= 1 && Math.abs(p.y - p2.y) <= 2) {
+                    neighbours.add(j);
+                }
+            }
+
+            int numNeighbours = neighbours.length();
+            for (int j = numNeighbours - 1; j >= 0; --j) {
+                points.remove(neighbours.at(j));
+            }
+            n -= numNeighbours;
+
+        }
+    }
+
     private static BufferedImage createScreenCapture() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int sw = screenSize.width;
@@ -582,34 +746,34 @@ public class CalibrationForSpin {
         this(createScreenCapture());
     }
 
-    static CalibrationForSpin storedForWhite() throws IOException {
-        return new CalibrationForSpin(
-                621,
-                341,
-                1209,
-                823,
-                true,
-                false,
-                49,
-                49,
-                52,
-                46);
-    }
+    // static CalibrationForSpin storedForWhite() throws IOException {
+    // return new CalibrationForSpin(
+    // 621,
+    // 341,
+    // 1209,
+    // 823,
+    // true,
+    // false,
+    // 49,
+    // 49,
+    // 52,
+    // 46);
+    // }
 
-    static CalibrationForSpin storedForBlack() throws IOException {
-        return new CalibrationForSpin(
-                621,
-                341,
-                1209,
-                823,
-                false,
-                true,
-                48,
-                49,
-                56,
-                46);
+    // static CalibrationForSpin storedForBlack() throws IOException {
+    // return new CalibrationForSpin(
+    // 621,
+    // 341,
+    // 1209,
+    // 823,
+    // false,
+    // true,
+    // 48,
+    // 49,
+    // 56,
+    // 46);
 
-    }
+    // }
 
     public class FieldAnalyzer {
         final ArrayList<Chequer> allChequers;
@@ -745,21 +909,66 @@ public class CalibrationForSpin {
         Tools.showImg("Control View", v.img, true);
     }
 
-    public ArrayList<Chequer> searchAllVisibleChequers(BufferedImage screen) {
-        ArrayList<Point> blackPositions = searchAllChequersOfColor(screen, blackChequer, null);
-        ArrayList<Point> whitePositions = searchAllChequersOfColor(screen, whiteChequer, null);
-        ArrayList<Chequer> blackChequers = new ArrayList<>();
-        ArrayList<Chequer> whiteChequers = new ArrayList<>();
-        for (Point p : blackPositions) {
-            blackChequers.add(new Chequer(ChequerColor.BLACK, p));
+    // public ArrayList<Chequer> searchAllVisibleChequers(BufferedImage screen) {
+    // // Zu ersetzen durch Kreissuche mit Hilfe von OpenCV:
+    // // ArrayList<Point> blackPositions = searchAllChequersOfColor(screen,
+    // blackChequer, 180000, 2100, null);
+    // // ArrayList<Point> whitePositions = searchAllChequersOfColor(screen,
+    // whiteChequer, 180000, 5, null);
+    // // ArrayList<Chequer> blackChequers = new ArrayList<>();
+    // // ArrayList<Chequer> whiteChequers = new ArrayList<>();
+    // // for (Point p : blackPositions) {
+    // // blackChequers.add(new Chequer(ChequerColor.BLACK, p));
+    // // }
+    // // for (Point p : whitePositions) {
+    // // whiteChequers.add(new Chequer(ChequerColor.WHITE, p));
+    // // }
+    // ArrayList<Chequer> allChequers = new ArrayList<Chequer>();
+    // // allChequers.addAll(whiteChequers);
+
+    // return allChequers;
+    // }
+
+    public ArrayList<Chequer> searchAllVisibleChequers(BufferedImage board) {
+        // ArrayList<Point> blackPositions = searchAllChequersOfColor(board,
+        // cal.blackChequer, null);
+        // ArrayList<Point> whitePositions = searchAllChequersOfColor(board,
+        // cal.whiteChequer, null);
+        // ArrayList<Chequer> blackChequers = new ArrayList<>();
+        // ArrayList<Chequer> whiteChequers = new ArrayList<>();
+        // for (Point p : blackPositions) {
+        // blackChequers.add(new Chequer(ChequerColor.BLACK, p));
+        // }
+        // for (Point p : whitePositions) {
+        // whiteChequers.add(new Chequer(ChequerColor.WHITE, p));
+        // }
+        // ArrayList<Chequer> allChequers = new ArrayList<Chequer>(blackChequers);
+        // allChequers.addAll(whiteChequers);
+
+        // System.out.println("allChequers.size() " + allChequers.size());
+        // for (Chequer c : allChequers) {
+        // System.out.println("chequer " + c.color + " " + c.pos);
+        // }
+
+        SearchChequerCircles s = new SearchChequerCircles();
+        int n = s.run(board, tmpFloats);
+        ArrayList<Chequer> allChequers = new ArrayList<>();
+        allChequers.clear();
+
+        var raster = board.getRaster();
+        float[] pixel = new float[3];
+
+        for (int i = 0; i < n; ++i) {
+            int x = Math.round(tmpFloats[i * 3]);
+            int y = Math.round(tmpFloats[i * 3 + 1]);
+
+            pixel = raster.getPixel(x, y, pixel);
+            boolean white = (pixel[0] + pixel[1] + pixel[2]) / 3 > 128;
+            allChequers.add(new Chequer(white ? ChequerColor.WHITE : ChequerColor.BLACK, new Point(x, y)));
         }
-        for (Point p : whitePositions) {
-            whiteChequers.add(new Chequer(ChequerColor.WHITE, p));
-        }
-        ArrayList<Chequer> allChequers = new ArrayList<Chequer>(blackChequers);
-        allChequers.addAll(whiteChequers);
 
         return allChequers;
+
     }
 
     public ArrayList<Chequer> searchAllVisibleChequers() {
@@ -767,11 +976,16 @@ public class CalibrationForSpin {
     }
 
     public ArrayList<Point> searchAllChequersOfColor(BufferedImage screen, BufferedImage[] imgVariants,
+            int sqDiffSumLimit, int diffSumLimit,
             ArrayList<Point> res) {
+        System.out.println("searchAllChequersOfColor called");
         if (res == null)
             res = new ArrayList<>();
 
         Raster screenRa = screen.getData();
+        // final int sqDiffSumLimit = 180000;
+        // final int diffSumLimit = 2100;
+        int imgVariantIdx = 0;
 
         for (var img : imgVariants) {
             Raster imgRa = img.getData();
@@ -779,20 +993,27 @@ public class CalibrationForSpin {
             int ih = img.getHeight();
             int iCenterX = (iw - 1) / 2;
             int iCenterY = (ih - 1) / 2;
-            int radius = Math.min(iCenterX, iCenterY);
+            int radius = Math.min(iCenterX, iCenterY) - 4;
             int radiusSq = radius * radius;
             int sw = screen.getWidth();
             int sh = screen.getHeight();
             int[] sPixel = null, iPixel = null;
+            int minSqDiffSum = 1000000000;
+            int numSqUnderLimit = 0;
 
             for (int centerY = radius; centerY < sh - radius; ++centerY) {
                 for (int centerX = radius; centerX < sw - radius; ++centerX) {
                     // System.out.println("center (" + centerX + "," + centerY + ")");
                     boolean different = false;
-                    for (int dy = -radius; dy <= radius && !different; ++dy) {
+                    int sqDiffSum = 0;
+                    int diffSum = 0;
+                    for (int dy = -radius; dy <= radius && sqDiffSum < sqDiffSumLimit /* && !different */; ++dy) {
                         int maxDx = (int) Math.round(Math.sqrt(radiusSq - dy * dy));
+                        // maxDx = 0;
+                        // System.out.println("radius " + radius + " dy " + dy + " " + " maxDx " +
+                        // maxDx);
 
-                        for (int dx = -maxDx; dx <= maxDx && !different; ++dx) {
+                        for (int dx = -maxDx; dx <= maxDx && sqDiffSum < sqDiffSumLimit /* && !different */; ++dx) {
                             sPixel = screenRa.getPixel(centerX + dx, centerY + dy, sPixel);
                             iPixel = imgRa.getPixel(iCenterX + dx, iCenterY + dy, iPixel);
 
@@ -800,9 +1021,24 @@ public class CalibrationForSpin {
                             // erkannt werden?
                             boolean change = true;
                             if (change) {
-                                int diff = 2;
+                                int diff = 2; // 54 zu viel, 53 zu wenig
+                                int dpx = sPixel[0] - iPixel[0];
+                                sqDiffSum += dpx * dpx;
+                                diffSum += dpx;
+                                dpx = sPixel[1] - iPixel[1];
+                                sqDiffSum += dpx * dpx;
+                                diffSum += dpx;
+                                dpx = sPixel[2] - iPixel[2];
+                                sqDiffSum += dpx * dpx;
+                                diffSum += dpx;
                                 if (Math.abs(sPixel[0] - iPixel[0]) > diff || Math.abs(sPixel[1] - iPixel[1]) > diff
                                         || Math.abs(sPixel[2] - iPixel[2]) > diff) {
+                                    // if (/* (dy > -radius + 1 || dx > -maxDx + 1) && */ centerX >= 785 - 40
+                                    // && centerX <= 785 + 40 && centerY >= ((323 /* + 416 */)/* / 2 */) - 40
+                                    // && centerY <= ((323 /* + 416 */) /* / 2 */) + 40)
+                                    // System.out.println("different = true with centerX " + centerX + " centerY "
+                                    // + centerY + " (dx- -maxDx) " + (dx - (-maxDx)) + " dy - -radius "
+                                    // + (dy - (-radius)));
                                     different = true;
                                 }
 
@@ -816,17 +1052,39 @@ public class CalibrationForSpin {
                         }
                     }
 
-                    if (!different) {
+                    if (!different || sqDiffSum < sqDiffSumLimit && Math.abs(diffSum) < diffSumLimit) {
+                        System.out.println("sqDiffSum when not different: " + sqDiffSum + "   diffSum " + diffSum
+                                + "   (imgVariant " + imgVariantIdx
+                                + ") on centerX " + centerX + "  centerY " + centerY);
                         res.add(new Point(centerX, centerY));
+                    } else {
+                        if (sqDiffSum < minSqDiffSum) {
+                            minSqDiffSum = sqDiffSum;
+                            // System.out.println("new min diffsum " + diffSum + " at centerX " + centerX +
+                            // " centerY " + centerY);
+                        }
+
+                        if (sqDiffSum < sqDiffSumLimit) {
+
+                            // System.out.println("sqDiffSum when different: " + sqDiffSum + " diffSum " +
+                            // diffSum + " (imgVariant " + imgVariantIdx
+                            // + ") on centerX " + centerX + " centerY " + centerY);
+                            ++numSqUnderLimit;
+                        }
                     }
                 }
             }
+            System.out.println("at imgVariantIdx " + imgVariantIdx + ": minDiffSum when different: " + minSqDiffSum);
+            System.out.println("numUnderLimit " + numSqUnderLimit);
+            ++imgVariantIdx;
         }
+
         return res;
     }
 
-    public ArrayList<Point> searchAllChequersOfColor(BufferedImage[] imgVariants, ArrayList<Point> res) {
-        return searchAllChequersOfColor(createScreenCapture(), imgVariants, res);
+    public ArrayList<Point> searchAllChequersOfColor(BufferedImage[] imgVariants, int sqDiffSumLimit, int diffSumLimit,
+            ArrayList<Point> res) {
+        return searchAllChequersOfColor(createScreenCapture(), imgVariants, sqDiffSumLimit, diffSumLimit, res);
     }
 
     public int centerXOfField(int field) {

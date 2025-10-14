@@ -2,9 +2,9 @@ package pr.backgammon;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -12,18 +12,36 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.features2d.SimpleBlobDetector;
+import org.opencv.features2d.SimpleBlobDetector_Params;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import pr.backgammon.control.AllMoves;
 import pr.backgammon.control.CreateIndexOfPublishedMatches;
@@ -32,6 +50,7 @@ import pr.backgammon.control.OwnMove;
 import pr.backgammon.control.OwnMoveCb;
 import pr.backgammon.gnubg.model.GSetBoardSimple;
 import pr.backgammon.jokers.control.AllJokers;
+import pr.backgammon.model.Field;
 import pr.backgammon.model.Match;
 import pr.backgammon.model.Roll;
 import pr.backgammon.spin.SpinTracking;
@@ -39,22 +58,36 @@ import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.CalibrationForSpin;
 import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.MatchControl;
-import pr.backgammon.spin.control.Rolls;
+import pr.backgammon.spin.control.ScreenSearchers;
+import pr.backgammon.spin.control.SearchBearoffRects;
+import pr.backgammon.spin.control.SearchChequerCircles;
 import pr.backgammon.spin.control.SpinRolls;
+import pr.backgammon.spin.control.TemplateSearchers;
+import pr.backgammon.spin.control.workers.Calibrate;
+import pr.backgammon.spin.control.workers.CalibrateRes;
 import pr.backgammon.spin.control.workers.WaitForOppMove;
 import pr.backgammon.spin.control.workers.WaitForOppMoveRes;
 import pr.backgammon.spin.model.WaitForOppMoveBug;
 import pr.backgammon.spin.model.WorkerState;
 import pr.backgammon.spin.view.SpinTrackFrame;
 import pr.backgammon.view.MatchView;
+import pr.control.MyRobot;
 import pr.control.MyWorker;
+import pr.control.TemplateSearcherOld;
 import pr.control.Tools;
+import pr.cv.BufferedImageToMat;
+import pr.cv.MatToBufferedImage;
 import pr.http.HttpSessionClient;
-import pr.http.HttpUtil;
 import pr.model.MutableIntArray;
+import pr.view.ImgAndMousePosFrame;
+import pr.view.MousePosView;
 
 @SuppressWarnings("unused")
 public class Test {
+
+    static {
+    }
+
     private static MutableIntArray testMove(int... m) {
         MutableIntArray a = new MutableIntArray(8);
         for (int i = 0; i < m.length; ++i) {
@@ -457,26 +490,72 @@ public class Test {
     }
 
     private static void testSpinRolls() throws Exception {
-        System.out.println("Bitte initialen Wurf in spin.de aufstellen und dann Enter");
-        Robot r = new Robot();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        reader.readLine();
-        Rectangle screenRect = new Rectangle(0, 0);
-        screenRect.setSize(Toolkit.getDefaultToolkit().getScreenSize());
-        BufferedImage screen = r.createScreenCapture(screenRect);
-        CalibrationForSpin cal = new CalibrationForSpin(screen);
-        Rolls rolls = new Rolls(cal);
-        FastChequerSearch fastChequerSearch = new FastChequerSearch(cal);
-        Rectangle boardScreenshotRect = fastChequerSearch.boardScreenshotRect(null);
-        SpinRolls spinRolls = new SpinRolls(cal, boardScreenshotRect);
 
-        System.out.println("Bitte zu testenden Wurf bereitstellen und dann Enter");
-        reader.readLine();
+        try {
+            initOpenCV();
 
-        screen = r.createScreenCapture(screenRect);
-        spinRolls.debug(screen, rolls, fastChequerSearch);
+            // ScreenSearchers s;
+            TemplateSearchers ts;
+            Rectangle screenRect;
+            {
+                // We assume that all screens are horizontally aligned and sum up all widths
+                int wsum = 0, hmax = 0;
+                var devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+                for (var device : devices) {
+                    var dm = device.getDisplayMode();
+                    wsum += dm.getWidth();
+                    hmax = Math.max(hmax, dm.getHeight());
+                }
+                screenRect = new Rectangle(0, 0, wsum, hmax);
+                // s = new ScreenSearchers(screenRect);
+                ts = new TemplateSearchers(screenRect);
 
-        // shotsize war hier 868x574
+                Calibrate calibrate = new Calibrate(ts) {
+                    @Override
+                    public void resultOnEventDispatchThread(CalibrateRes res) {
+                        System.out.println("\n\n\n******* result!!!");
+                        BoardSearchers bs;
+                        if (res.error != null) {
+                            System.out.println(res.error);
+                        } else {
+                            if (res.calWhite.ownWhite && !res.calBlack.ownWhite) {
+                                CalibrationForSpin cal = res.calBlack; // TODO adapt for specific test
+                                FastChequerSearch chequers = new FastChequerSearch(cal, ts);
+                                try {
+                                    Rectangle boardScreenshotRect = chequers.boardScreenshotRect(null);
+                                    bs = new BoardSearchers(cal, boardScreenshotRect);
+
+                                    System.out.println("Bitte zu testenden Wurf bereitstellen und dann Enter");
+                                    BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                                    in.readLine();
+                                    SpinRolls spinRolls = new SpinRolls(cal, boardScreenshotRect);
+                                    var board = bs.boardShot();
+                                    var f = new ImgAndMousePosFrame("board");
+                                    f.setImg(board);
+                                    f.setVisible(true);
+                                    // Tools.showImg("board", board, false);
+                                    // var boardRaster = board.getRaster();
+                                    spinRolls.detectFromBoardShot(board);
+                                    spinRolls.dump();
+                                    chequers.init(board);
+                                    // chequers.chequersOffWhite()
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                };
+                calibrate.execute();
+                do {
+                    Thread.sleep(100000);
+                } while (true);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private static void testSwingWorker() throws Exception {
@@ -519,10 +598,22 @@ public class Test {
     }
 
     private static void testMatchControl() throws Exception {
+        initOpenCV();
+
         MatchControl matchControl = new MatchControl();
         matchControl.run();
         SpinTracking spinTracking = new SpinTracking();
         spinTracking.run();
+    }
+
+    private static void initOpenCV() {
+        try {
+            // lädt libopencv_java412.so über java.library.path/LD_LIBRARY_PATH
+            System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        } catch (UnsatisfiedLinkError e) {
+            // Fallback: absoluter Pfad, wenn du keinen Pfad setzen willst
+            System.load("/home/peter/opencv_4.12/opencv/build/lib/libopencv_java4130.so");
+        }
     }
 
     private static void testMatchViewContainingField() throws Exception {
@@ -681,6 +772,10 @@ public class Test {
                 JFrame frame = new JFrame();
                 frame.setLayout(new BorderLayout());
                 frame.add(v, BorderLayout.CENTER);
+                var mousePosView = new MousePosView(v);
+                mousePosView.setPreferredSize(new Dimension(200, 100));
+                mousePosView.start();
+                frame.add(mousePosView, BorderLayout.EAST);
                 frame.pack();
                 frame.setVisible(true);
             }
@@ -715,9 +810,9 @@ public class Test {
     private static void testOwnMove() throws Exception {
         WorkerState state = new WorkerState();
         Match match = state.match;
-        match.getPlayer(1).field.set(25, 1);
-        match.getPlayer(1).field.set(24, 1);
-        match.initialRoll(1, 5, 6);
+        // match.getPlayer(1).field.set(25, 1);
+        // match.getPlayer(1).field.set(24, 1);
+        match.initialRoll(1, 3, 3);
         MatchView matchView = new MatchView(match, true, false);
         testShowMatchView(matchView);
         OwnMove ownMove = new OwnMove(state, matchView, new OwnMoveCb() {
@@ -846,11 +941,12 @@ public class Test {
         var winningMove = WaitForOppMove.findWinningMove(workerState);
         System.out.println("winningMove: " + winningMove);
         CalibrationForSpin cal = new CalibrationForSpin();
-        FastChequerSearch chequers = new FastChequerSearch(cal);
+        TemplateSearchers ts = new TemplateSearchers(new Rectangle(0, 0, 1600, 1000));
+        FastChequerSearch chequers = new FastChequerSearch(cal, ts);
         Rectangle boardRect = chequers.boardScreenshotRect(null);
         var bs = new BoardSearchers(cal, boardRect);
         var spinRolls = new SpinRolls(cal, boardRect);
-        var worker = new WaitForOppMove(cal, bs, spinRolls) {
+        var worker = new WaitForOppMove(cal, bs, ts, spinRolls) {
             @Override
             public void resultOnEventDispatchThread(WaitForOppMoveRes result) {
                 System.out.println("result:");
@@ -978,13 +1074,12 @@ public class Test {
             System.out.println("json: '" + json + "'");
 
             // JsonObject json = builder.add("globalAccId", "68ac2854f60b95ed625d6f22")
-            //         .add("name1", match.getPlayerName(match.own))
-            //         .add("name2", match.getPlayerName(1 - match.own))
-            //         .add("counts1", ownJokersJson)
-            //         .add("counts2", oppJokersJson).build();
+            // .add("name1", match.getPlayerName(match.own))
+            // .add("name2", match.getPlayerName(1 - match.own))
+            // .add("counts1", ownJokersJson)
+            // .add("counts2", oppJokersJson).build();
 
             // System.out.println("json: " + json);
-
 
             boolean manualCookieOverride = true;
             HttpSessionClient client = new HttpSessionClient(manualCookieOverride);
@@ -1004,7 +1099,559 @@ public class Test {
         o.run();
     }
 
+    private static void testOpenCv() throws Exception {
+        initOpenCV();
+
+        System.out.println("OpenCV: " + Core.getVersionString());
+        // Mat img = Imgcodecs.imread("pr/res/whiteChequer.png");
+        Mat img = BufferedImageToMat.toBgrMat(MyRobot.shot(new Rectangle(0, 0, 1600, 1000)));
+
+        System.out.println("Gelesen: " + (!img.empty()) + ", Größe: " + img.size());
+        Mat gray = new Mat();
+        Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY);
+
+        // 2) Rauschen reduzieren (Median- oder Gaussian-Blur)
+        {
+            double sigmaX = 1.2;
+            double sigmaY = 1.2;
+            int borderType = Core.BORDER_CONSTANT;
+            Imgproc.GaussianBlur(gray, gray, new Size(9, 9), sigmaX, sigmaY, borderType);
+            Tools.showImg("GaussianBlur", MatToBufferedImage.matToBufferedImage(gray), false);
+        }
+
+        Mat circles = new Mat();
+        int method = Imgproc.HOUGH_GRADIENT;
+        // double dp = 1.0;
+        // double minDist = 44;
+        // double param1 = 100;
+        // double param2 = 10; // 30
+        // int minRadius = 11;
+        // int maxRadius = 13;
+
+        // Recht gut:
+        // double dp = 1.0;
+        // double minDist = 44;
+        // double param1 = 150;
+        // double param2 = 10; // 30
+        // int minRadius = 11;
+        // int maxRadius = 13;
+
+        double dp = 1.0;
+        double minDist = 44;
+        double param1 = 100;
+        double param2 = 20; // 30
+        int minRadius = 11;
+        int maxRadius = 13;
+        Imgproc.HoughCircles(gray, circles, method, dp, minDist, param1, param2, minRadius, maxRadius);
+        System.out.println("Gefundene Kreise: " + circles.cols());
+        System.out.println("Gefundene Kreise: " + circles);
+        System.out.println("rows: " + circles.rows());
+        Mat result = new Mat();
+        img.copyTo(result);
+
+        int numCircles = circles.cols();
+        Point p = new Point();
+        float[] data = new float[3];
+        int blue = 0;
+        int green = 0;
+        int red = 255;
+        Scalar color = new Scalar(blue, green, red);
+        for (int i = 0; i < numCircles; ++i) {
+            int getRes = circles.get(0, i, data);
+            System.out.println("getRes " + getRes);
+            p.x = Math.round(data[0]);
+            p.y = Math.round(data[1]);
+            int radius = Math.round(data[2]);
+            Imgproc.circle(result, p, radius, color);
+        }
+
+        var resultImg = MatToBufferedImage.matToBufferedImage(result);
+        Tools.showImg("Kreise", resultImg, true);
+    }
+
+    private static void testSearchChequerCircles() {
+        initOpenCV();
+
+        SearchChequerCircles s = new SearchChequerCircles();
+        float[] circles = new float[3 * 50];
+        int n = s.run(MyRobot.shot(new Rectangle(0, 0, 1600, 950)), circles);
+        System.out.println("n=" + n);
+        for (int i = 0; i < n; ++i) {
+            float x = circles[i * 3];
+            float y = circles[i * 3 + 1];
+            float radius = circles[i * 3 + 2];
+            System.out.println("x " + x + "  y " + y + "  radius " + radius);
+        }
+    }
+
+    private static void testSearchBearoffRects() throws Exception {
+        initOpenCV();
+
+        SearchBearoffRects s = new SearchBearoffRects();
+        BufferedImage bufferedImg = Tools.loadImg(new File("screenshots/bearoffChequers.png"));
+        Mat img = BufferedImageToMat.toBgrMat(bufferedImg);
+        Imgproc.GaussianBlur(img, img, new Size(9, 9), 0);
+        Mat img8bit = new Mat();
+        Imgproc.cvtColor(img, img8bit, Imgproc.COLOR_BGR2GRAY);
+        Tools.showImg("CV_8S", MatToBufferedImage.matToBufferedImage(img8bit), true);
+        s.run(img8bit);
+    }
+
+    private static void testDieCircles() throws Exception {
+        initOpenCV();
+
+        double blackQuotSum = 0, blackQuotNum = 0;
+        double whiteQuotSum = 0, whiteQuotNum = 0;
+
+        String[] colors = { "black", "white" };
+
+        final double pixPerDieWhite = 14.273148148148145;
+        final double pixPerDieBlack = 3.9434210526315794; // 3.989102564102564; //4.03333333333333;
+
+        for (String dieColor : colors) {
+            boolean whiteDie = dieColor.equals("white");
+            final int threshold = whiteDie ? 100 : 185;
+            System.out.println("Arbeitsverzeichnis bei Farbe " + dieColor + ": " + System.getProperty("user.dir"));
+            File dir = new File("screenshots/dice/" + dieColor);
+
+            System.out.println("dir: " + dir + "  " + dir.isDirectory());
+            String[] files = dir.list();
+            System.out.println("files: " + files);
+
+            for (String file : files) {
+                int die = Integer.parseInt(file.substring(4, 5));
+                System.out.println("file " + file + "  die " + die);
+                String completePath = dir.getPath() + "/" + file;
+                System.out.println("completePath: " + completePath);
+                Mat img = Imgcodecs.imread(completePath);
+                Mat gray = new Mat();
+
+                Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY);
+                Imgproc.GaussianBlur(gray, gray, new Size(7, 7), 1.5, 1.5);
+                {
+                    MatOfInt channels = new MatOfInt(0);
+                    Mat mask = new Mat();
+                    Mat hist = new Mat();
+                    MatOfInt histSize = new MatOfInt(256);
+                    MatOfFloat ranges = new MatOfFloat(0, 256);
+                    Imgproc.calcHist(Arrays.asList(gray), channels, mask, hist, histSize, ranges);
+                    // System.out.println("hist.dump(): \n" + hist.dump());
+                    assert (hist.cols() == 1);
+                    assert (hist.rows() == 256);
+
+                    StringBuilder sb = new StringBuilder();
+
+                    double sum = 0;
+                    double sumThresh = 0;
+
+                    for (int i = 0; i < 256; ++i) {
+                        String nr = String.valueOf(i);
+                        for (int j = 0; j < 3 - nr.length(); ++j) {
+                            sb.append(' ');
+                        }
+                        sb.append(nr).append(": ");
+                        double val = hist.get(i, 0)[0];
+                        sum += val;
+                        if ((whiteDie && i <= threshold) || (!whiteDie && i > threshold)) {
+                            sumThresh += val;
+                        }
+                        sb.append(val);
+                        sb.append('\n');
+                    }
+                    double calcDie = (whiteDie ? sumThresh / pixPerDieWhite : sumThresh / pixPerDieBlack);
+                    // System.out.println("Hist details:\n" + sb);
+                    System.out.println("\n\ndieColor: " + dieColor);
+                    System.out.println("die: " + die);
+                    System.out.println("Calculated die: " + calcDie);
+                    if (Math.round(calcDie) != die) {
+                        System.err.println("\n\n***** FEHLER! calcDie " + calcDie + "   die " + die);
+                    }
+                    System.out.println("sum: " + sum);
+                    System.out.println("sumThresh: " + sumThresh);
+                    System.out.println("sumThresh / die: " + sumThresh / die);
+                    System.out.println("num pixels in img: " + gray.rows() * gray.cols() + "\n\n");
+
+                    if (whiteDie) {
+                        whiteQuotSum += sumThresh / die;
+                        ++whiteQuotNum;
+                    } else {
+                        blackQuotSum += sumThresh / die;
+                        ++blackQuotNum;
+                    }
+                }
+
+                {
+                    // Zeichne threshold-bild mit allen pixeln <= thresh
+
+                    Mat thresholdImg = new Mat();
+                    Imgproc.threshold(gray, thresholdImg, threshold, 255, Imgproc.THRESH_BINARY);
+                    Tools.showImg(file + " - threshold " + threshold,
+                            MatToBufferedImage.matToBufferedImage(thresholdImg),
+                            false);
+
+                    MatOfInt channels = new MatOfInt(0);
+                    Mat mask = new Mat();
+                    Mat hist = new Mat();
+                    MatOfInt histSize = new MatOfInt(256);
+                    MatOfFloat ranges = new MatOfFloat(0, 256);
+                    Imgproc.calcHist(Arrays.asList(thresholdImg), channels, mask, hist, histSize, ranges);
+
+                    // System.out.println("Hist of thresholdImg:\n" + hist.dump());
+                    double sum = whiteDie ? hist.get(0, 0)[0] : hist.get(255, 0)[0];
+                    double dieFromThresholdImg = sum / (whiteDie ? pixPerDieWhite : pixPerDieBlack);
+                    int dieFromThresholdImg1 = (int) Math.round(dieFromThresholdImg);
+                    System.out.println("die " + die + "  dieFromThresholdImg " + dieFromThresholdImg);
+                    if (dieFromThresholdImg1 != die) {
+                        System.err.println(
+                                "\n\n**** FEHLER dieFromThresholdImg1 " + dieFromThresholdImg1 + "   die " + die);
+                        throw new IllegalStateException();
+                    }
+                }
+
+                Mat circles = new Mat();
+                int method = Imgproc.HOUGH_GRADIENT_ALT;
+                // double dp = 1.20;
+                // double minDist = 9;
+                // double param1 = 100; // last: 900
+                // double param2 = 11; // 30
+                // int minRadius = 2;
+                // int maxRadius = 5;
+
+                double dp = 1.2;
+                double minDist = 100;
+                double param1 = 1; // last: 900
+                double param2 = 0.1; // 30
+                int minRadius = 3;
+                int maxRadius = 5;
+
+                // Recht gut:
+                // double dp = 1.0;
+                // double minDist = 44;
+                // double param1 = 150;
+                // double param2 = 10; // 30
+                // int minRadius = 2;
+                // int maxRadius = 4;
+
+                // double dp = 1.0;
+                // double minDist = 44;
+                // double param1 = 100;
+                // double param2 = 20; // 30
+                // int minRadius = 2;
+                // int maxRadius = 4;
+                Imgproc.HoughCircles(gray, circles, method, dp, minDist, param1, param2, minRadius, maxRadius);
+                int cols = circles.cols();
+                System.out.println("cols " + cols);
+
+                Mat result = new Mat();
+                gray.copyTo(result);
+
+                int numCircles = circles.cols();
+
+                Point p = new Point();
+                float[] data = new float[3];
+                int blue = 0;
+                int green = 0;
+                int red = 255;
+                Scalar color = new Scalar(blue, green, red);
+                // System.out.println("elemSize: " + circles.elemSize());
+                // System.out.println("elemSize1: " + circles.elemSize1());
+                for (int i = 0; i < numCircles; ++i) {
+                    int getRes = circles.get(0, i, data);
+                    System.out.println("getRes " + getRes);
+                    p.x = Math.round(data[0]);
+                    p.y = Math.round(data[1]);
+                    int radius = Math.round(data[2]);
+                    System.out.println("radius " + radius);
+                    Imgproc.circle(result, p, radius, color);
+                }
+
+                var resultImg = MatToBufferedImage.matToBufferedImage(result);
+
+                Tools.showImg(file + (die == numCircles ? " - KORREKT" : " - FALSCH"), resultImg, false);
+
+                ImgAndMousePosFrame f = new ImgAndMousePosFrame("gray - " + file);
+                f.setImg(MatToBufferedImage.matToBufferedImage(gray));
+                f.setMat(gray);
+                f.setVisible(true);
+
+            }
+        }
+
+        System.out.println("White: " + whiteQuotSum / whiteQuotNum);
+        System.out.println("Black: " + blackQuotSum / blackQuotNum);
+
+        // String[] files = {
+        // "die-2",
+        // "die-4",
+        // "die-5",
+        // "die-6",
+        // };
+        // int[] dice = {
+        // 2,
+        // 4,
+        // 5,
+        // 6
+        // };
+
+        // for (int j = 0; j < files.length; ++j) {
+        // String file = files[j];
+        // int die = dice[j];
+        // Mat img = Imgcodecs.imread("screenshots/" + file + ".bmp");
+        // Mat gray = new Mat();
+        // Imgproc.cvtColor(img, gray, Imgproc.COLOR_BGR2GRAY);
+        // Mat circles = new Mat();
+        // int method = Imgproc.HOUGH_GRADIENT;
+        // double dp = 1.20;
+        // double minDist = 9;
+        // double param1 = 100; // last: 900
+        // double param2 = 11; // 30
+        // int minRadius = 2;
+        // int maxRadius = 5;
+
+        // // Recht gut:
+        // // double dp = 1.0;
+        // // double minDist = 44;
+        // // double param1 = 150;
+        // // double param2 = 10; // 30
+        // // int minRadius = 2;
+        // // int maxRadius = 4;
+
+        // // double dp = 1.0;
+        // // double minDist = 44;
+        // // double param1 = 100;
+        // // double param2 = 20; // 30
+        // // int minRadius = 2;
+        // // int maxRadius = 4;
+        // Imgproc.HoughCircles(gray, circles, method, dp, minDist, param1, param2,
+        // minRadius, maxRadius);
+        // int cols = circles.cols();
+        // System.out.println("cols " + cols);
+
+        // Mat result = new Mat();
+        // img.copyTo(result);
+
+        // int numCircles = circles.cols();
+
+        // Point p = new Point();
+        // float[] data = new float[3];
+        // int blue = 0;
+        // int green = 0;
+        // int red = 255;
+        // Scalar color = new Scalar(blue, green, red);
+        // // System.out.println("elemSize: " + circles.elemSize());
+        // // System.out.println("elemSize1: " + circles.elemSize1());
+        // for (int i = 0; i < numCircles; ++i) {
+        // int getRes = circles.get(0, i, data);
+        // System.out.println("getRes " + getRes);
+        // p.x = Math.round(data[0]);
+        // p.y = Math.round(data[1]);
+        // int radius = Math.round(data[2]);
+        // System.out.println("radius " + radius);
+        // Imgproc.circle(result, p, radius, color);
+        // }
+
+        // var resultImg = MatToBufferedImage.matToBufferedImage(result);
+
+        // Tools.showImg(file + (die == numCircles ? " - KORREKT" : " - FALSCH"),
+        // resultImg, false);
+        // }
+
+    }
+
+    private static void testTemplateSearcher() throws Exception {
+        initOpenCV();
+
+        int wsum = 0, hmax = 0;
+        var devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        for (var device : devices) {
+            var dm = device.getDisplayMode();
+            wsum += dm.getWidth();
+            hmax = Math.max(hmax, dm.getHeight());
+        }
+        var screenRect = new Rectangle(0, 0, wsum, hmax);
+        TemplateSearchers ts = new TemplateSearchers(screenRect);
+        // TemplateSearcher s = new TemplateSearcher("cubeEmpty",
+        // TemplateSearcher.defaultMinLimit, ".png");
+        // {
+        // // TemplateSearcher s = ts.resignFromOpp2();
+        // var s = ts.playerBoxWhiteReady();
+        // BufferedImage shot = MyRobot.shot(new Rectangle(0, 0, 1600, 800));
+        // var res = s.run(shot, true);
+        // // java.awt.Point pos = s.search(shot, true);
+        // // System.out.println("pos: " + pos);
+        // // Falscher maxVal bei nicht-ready: 0.7201589345932007
+        // // Richtiger maxVal: 0.9008707404136658
+        // System.out.println("playerBoxWhiteReady");
+        // System.out.println("maxVal: " + res.maxVal);
+        // System.out.println("minVal: " + res.minVal); // korrekt 8: 337060
+        // System.out.println("maxLoc: " + res.maxLoc.x + "," + res.maxLoc.y);
+        // System.out.println("minLoc: " + res.minLoc.x + "," + res.minLoc.y);
+        // }
+        // {
+        // // TemplateSearcher s = ts.resignFromOpp2();
+        // var s = ts.playerBoxWhite();
+        // BufferedImage shot = MyRobot.shot(new Rectangle(0, 0, 1600, 800));
+        // var res = s.run(shot, true);
+        // // java.awt.Point pos = s.search(shot, true);
+        // // System.out.println("pos: " + pos);
+        // // Falscher maxVal bei ready: 0.63746178150177
+        // // Richtiger maxVal: 1.0
+        // System.out.println("playerBoxWhite");
+        // System.out.println("maxVal: " + res.maxVal);
+        // System.out.println("minVal: " + res.minVal); // korrekt 8: 337060
+        // System.out.println("maxLoc: " + res.maxLoc.x + "," + res.maxLoc.y);
+        // System.out.println("minLoc: " + res.minLoc.x + "," + res.minLoc.y);
+        // }
+        // {
+        // // TemplateSearcher s = ts.resignFromOpp2();
+        // var s = ts.playerBoxBlackReady();
+        // BufferedImage shot = MyRobot.shot(new Rectangle(0, 0, 1600, 800));
+        // var res = s.run(shot, true);
+        // // java.awt.Point pos = s.search(shot, true);
+        // // System.out.println("pos: " + pos);
+        // // falscher maxVal bei nicht ready: 0.7056231498718262
+        // // richtiger maxVal: 0.8509844541549683
+        // System.out.println("playerBoxBlackReady");
+        // System.out.println("maxVal: " + res.maxVal);
+        // System.out.println("minVal: " + res.minVal); // korrekt 8: 337060
+        // System.out.println("maxLoc: " + res.maxLoc.x + "," + res.maxLoc.y);
+        // System.out.println("minLoc: " + res.minLoc.x + "," + res.minLoc.y);
+        // }
+        // {
+        // // TemplateSearcher s = ts.resignFromOpp2();
+        // var s = ts.playerBoxBlack();
+        // BufferedImage shot = MyRobot.shot(new Rectangle(0, 0, 1600, 800));
+        // var res = s.run(shot, true);
+        // // java.awt.Point pos = s.search(shot, true);
+        // // System.out.println("pos: " + pos);
+        // // falscher maxVal bei ready: 0.9595199227333069
+        // // richtiger maxVal: 1.0
+        // System.out.println("playerBoxBlack");
+        // System.out.println("maxVal: " + res.maxVal);
+        // System.out.println("minVal: " + res.minVal); // korrekt 8: 337060
+        // System.out.println("maxLoc: " + res.maxLoc.x + "," + res.maxLoc.y);
+        // System.out.println("minLoc: " + res.minLoc.x + "," + res.minLoc.y);
+        // }
+
+        // {
+        // // TemplateSearcher s = ts.resignFromOpp2();
+        // var s = ts.cube(1);
+        // BufferedImage shot = MyRobot.shot(new Rectangle(0, 0, 1600, 800));
+        // var res = s.run(shot, true);
+        // // java.awt.Point pos = s.search(shot, true);
+        // // System.out.println("pos: " + pos);
+        // // Falscher maxVal bei nicht-ready: 0.7201589345932007
+        // // Richtiger maxVal: 0.9008707404136658
+        // System.out.println("cube 1");
+        // System.out.println("maxVal: " + res.maxVal);
+        // System.out.println("minVal: " + res.minVal); // korrekt 8: 337060
+        // System.out.println("maxLoc: " + res.maxLoc.x + "," + res.maxLoc.y);
+        // System.out.println("minLoc: " + res.minLoc.x + "," + res.minLoc.y);
+        // }
+
+        var s = ts.chequerWhiteStar;
+        Thread.sleep(100); // Zeit geben um lastPos zu laden
+        var pos = s.run(MyRobot.shot(new Rectangle(0, 0, 1600, 1000)), true);
+        System.out.println("pos " + pos);
+        s.joinWorkers();
+    }
+
+    private static void testFastChequerSearch() throws Exception {
+        initOpenCV();
+
+        var x = new TestFastChequerSearch();
+        x.setVisible(true);
+    }
+
+    private static void testBearInAggregation() throws Exception {
+        MutableIntArray move = testMove(25, 24, 25, 24, 24, 23, 24, 23);
+        WorkerState s = new WorkerState();
+        s.match.getPlayer(0).setInitialField();
+        var otherField = s.match.getPlayer(0).field;
+        var result = new MutableIntArray(8);
+        var tmp = s.tmp;
+        Move.aggregate(1, 1, move, otherField, result, tmp);
+        // expected: 25/24 25/23 24/23
+        if (result.length() != 6 ||
+                result.at(0) != 25 ||
+                result.at(1) != 24 ||
+                result.at(2) != 25 ||
+                result.at(3) != 23 ||
+                result.at(4) != 24 ||
+                result.at(5) != 23) {
+
+            var sb = new StringBuilder();
+            sb.append("Calculated move: ");
+            result.append(sb);
+            sb.append("\nExpected move: 25 24 25 23 24 23");
+            System.out.println(sb);
+        } else {
+            System.out.println("testBearinAggregation[1] successful.");
+        }
+
+        move = testMove(25, 24, 24, 23, 23, 22, 22, 21);
+        Move.aggregate(1, 1, move, otherField, result, tmp);
+        if (!testMove(25, 21).equals(result)) {
+            var sb = new StringBuilder();
+            sb.append("Calculated move: ");
+            result.append(sb);
+            sb.append("\nExpected move: 25 21");
+            System.out.println(sb);
+        } else {
+            System.out.println("testBearinAggregation[2] successful.");
+        }
+    }
+
+    private static void testMoveSplit() throws Exception {
+
+    }
+
+    private static void testMoveSplit(int die1, int die2, MutableIntArray input, MutableIntArray expectedOut,
+            Field otherField, MutableIntArray out, MutableIntArray otherChequers) {
+        otherField.clear();
+        {
+            int n = otherChequers.length();
+            for (int i = 0; i < n; ++i) {
+                int field = otherChequers.at(i);
+                otherField.set(field, otherField.getChequers(field) + 1);
+            }
+        }
+
+        Move.split(die1, die2, input, otherField, out);
+    }
+
+    private static void testJavaEfficiency() throws Exception {
+        int n = 100000000;
+        int loops = 100;
+        var rnd = ThreadLocalRandom.current();
+        MutableIntArray src = new MutableIntArray(n);
+        MutableIntArray dst = new MutableIntArray(n);
+        System.out.println("Build src ...");
+        for (int i = 0; i < n; ++i) {
+            src.add(rnd.nextInt());
+        }
+
+        var start1 = System.currentTimeMillis();
+        for (int i = 0; i < loops; ++i) {
+            dst.clear();
+            dst.addRange(src, 0, n);
+        }
+        var end1 = System.currentTimeMillis();
+
+        var start2 = System.currentTimeMillis();
+        for (int i = 0; i < loops; ++i) {
+            dst.clear();
+            dst.addRange2(src, 0, n);
+        }
+        var end2 = System.currentTimeMillis();
+
+        System.out.println("Duration 1: " + (end1 - start1));
+        System.out.println("Duration 2: " + (end2 - start2));
+
+    }
+
     public static void main(String[] args) throws Exception {
+        // assert(false);
         // paintField1();
         // paint4OnOwnBar();
         // paint4OnOppBar();
@@ -1029,6 +1676,15 @@ public class Test {
         // testSendJokers();
         // testJokersJson();
         // testCreateIndexOfPublishedMatches();
+        // testOpenCv();
+        // testSearchChequerCircles();
+        // testSearchBearoffRects();
+        // testDieCircles();
+        // testTemplateSearcher();
+        // testFastChequerSearch();
+        // testBearInAggregation();
+        // testMoveSplit();
+        // testJavaEfficiency();
     }
 
 }

@@ -52,7 +52,7 @@ public class Player implements Mutable<Player> {
         return score;
     }
 
-    public void resetField() {
+    public void setInitialField() {
         field.setInitial();
     }
 

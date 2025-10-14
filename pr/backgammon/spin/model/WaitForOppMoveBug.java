@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -39,6 +40,7 @@ public class WaitForOppMoveBug implements Mutable<WaitForOppMoveBug> {
         // File[] files = Arrays.stream(findBugFiles()).map(name -> new
         // File(name)).toArray(File[]::new);
         String[] bugFiles = findBugFiles();
+        Arrays.sort(bugFiles);
 
         SwingUtilities.invokeLater(() -> {
             JList<String> list = new JList<>(bugFiles);

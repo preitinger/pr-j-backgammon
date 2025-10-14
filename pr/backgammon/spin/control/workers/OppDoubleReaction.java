@@ -1,22 +1,30 @@
 package pr.backgammon.spin.control.workers;
 
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
 import pr.backgammon.model.Match;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.MatchWorker;
 import pr.backgammon.spin.control.SpinRolls;
+import pr.backgammon.spin.control.TemplateSearchers;
 import pr.control.MyRobot;
 
 public abstract class OppDoubleReaction extends MatchWorker<Void> {
     private final BoardSearchers bs;
     private final SpinRolls spinRolls;
+    private final TemplateSearchers ts;
 
-    public OppDoubleReaction(BoardSearchers bs, SpinRolls spinRolls) {
+    public OppDoubleReaction(BoardSearchers bs, SpinRolls spinRolls, TemplateSearchers ts) {
         this.bs = bs;
         this.spinRolls = spinRolls;
+        this.ts = ts;
     }
 
     @Override
     public Void doIt() throws Exception {
+        System.out.println("\n***** OPP DOUBLE REACTION\n");
         Match match = state.match;
         // Wait for either dialog with resign or dialog with redouble reaction or own
         // roll or only cube doubled and no own roll or end of match or starting game
@@ -25,10 +33,11 @@ public abstract class OppDoubleReaction extends MatchWorker<Void> {
 
         do {
             Thread.sleep(100);
-            var board = bs.boardShot().getRaster();
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
 
-            if (bs.dlgCorner.run(board) != null) {
-                if (bs.verdoppelnOpp.run(board) != null || bs.verdoppelnOppLong.run(board) != null) {
+            if (ts.visible(ts.dlgCorner, board)) {
+                if (ts.visible(ts.dlgVerdoppelnOpp, board)) {
                     // Redouble from opponent, actually illegal in match, but it's spin you know?
                     // ;-)
                     match.cube.value <<= 1;
@@ -36,7 +45,7 @@ public abstract class OppDoubleReaction extends MatchWorker<Void> {
                     match.cube.offered = true;
                     return null;
                 } else {
-                    int resign = bs.searchOppResign(board);
+                    int resign = ts.searchOppResign(board);
                     if (resign > 0) {
                         match.offerResign(1 - match.own, resign);
                         System.out.println("resign erkannt");
@@ -46,7 +55,7 @@ public abstract class OppDoubleReaction extends MatchWorker<Void> {
                     }
                 }
             } else if (!taken) {
-                if (bs.sideVerlassen.run(board) != null) {
+                if (ts.visible(ts.bVerlassen, board)) {
                     // Match zuende, hat sich doch ein Dead Cube eingeschlichen.
                     // Kann nur durch drop passiert sein
                     match.drop();
@@ -54,7 +63,8 @@ public abstract class OppDoubleReaction extends MatchWorker<Void> {
                         throw new IllegalStateException("Match zuende, aber !match.finished?!");
                     }
                     return null;
-                } else if (bs.cubeSearcher(match.cube.value).run(board) != null) {
+                // } else if (bs.cubeSearcher(match.cube.value).run(boardRaster) != null) {
+                } else if (searchCube(match.cube.value, board) != null) {
                     // Opp has taken, just wait for own roll
                     System.out.println("Detected that opp has taken the double");
                     match.take();
@@ -97,5 +107,9 @@ public abstract class OppDoubleReaction extends MatchWorker<Void> {
                 }
             }
         } while (true);
+    }
+
+    private Point searchCube(int val, BufferedImage board) throws IOException {
+        return ts.search(ts.cube(val), board);
     }
 }

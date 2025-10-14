@@ -7,14 +7,18 @@ import pr.backgammon.model.Field;
 import pr.backgammon.spin.model.WorkerState;
 import pr.backgammon.view.MatchView;
 import pr.backgammon.view.MatchViewListener;
+import pr.model.MutableIntArray;
 
 public class OwnMove implements MatchViewListener {
     private final WorkerState state;
     private final MatchView matchView;
     private final OwnMoveCb cb;
+    private final MutableIntArray tmpDragMove;
+    private final MutableIntArray tmpSplitDragMove;
 
     /**
-     * state.match is changed temporarily but restored before any of the callback methods is called.
+     * state.match is changed temporarily but restored before any of the callback
+     * methods is called.
      */
     public OwnMove(WorkerState state, MatchView matchView, OwnMoveCb cb) {
         this.state = state;
@@ -33,36 +37,15 @@ public class OwnMove implements MatchViewListener {
         } else {
             matchView.setListener(this);
         }
+        state.tmp.clear();
+        tmpDragMove = state.tmp.add();
+        state.tmp2.clear();
+        tmpSplitDragMove = state.tmp2.add();
     }
 
     public void cancel() {
         matchView.setListener(null);
         undo();
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
-        int field = matchView.containingField(x, y);
-        if (field != -1) {
-            pipClicked(matchView.getClockwise() ? field : 25 - field, e.getButton());
-        }
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-        int x = e.getX();
-        int y = e.getY();
-        int field = matchView.containingField(x, y);
-        if (state.ongoingMove.hoveredField != -1 && field != state.ongoingMove.hoveredField) {
-            pipExited(state.ongoingMove.hoveredField);
-            state.ongoingMove.hoveredField = -1;
-        }
-        if (state.ongoingMove.hoveredField == -1 && field != -1) {
-            state.ongoingMove.hoveredField = field;
-            pipEntered(matchView.getOwnWhite() ? 25 - state.ongoingMove.hoveredField : state.ongoingMove.hoveredField);
-        }
     }
 
     /**
@@ -133,7 +116,8 @@ public class OwnMove implements MatchViewListener {
         }
 
         System.out.println("was a valid start with from " + from + " and die " + die);
-        Field.runPartMove(state.match.getPlayer(state.match.active).field, state.match.getPlayer(1 - state.match.active).field, from, to);
+        Field.runPartMove(state.match.getPlayer(state.match.active).field,
+                state.match.getPlayer(1 - state.match.active).field, from, to);
         return true;
 
     }
@@ -161,33 +145,43 @@ public class OwnMove implements MatchViewListener {
             throw new IllegalStateException();
         }
 
-        var ongoingMove = state.ongoingMove;
-        ongoingMove.highlightedPip = -1;
+        // Noch kein Konzept was wirklich bei einem Drag markiert werden soll. Am besten
+        // wohl doch einfach jeder Pip - egal ob gueltiger Zug oder nicht.
 
-        if (ongoingMove.move.length() == 8) {
+        {
+            state.ongoingMove.highlightedPip = fieldInMatchViewPerspective(field);
             matchView.setMatch(state.match, state.ongoingMove);
             return;
         }
 
-        boolean chequerOnBar = state.match.getPlayer(state.match.own).field.getChequers(25) > 0;
+        // var ongoingMove = state.ongoingMove;
+        // ongoingMove.highlightedPip = -1;
 
-        if (chequerOnBar) {
-            ongoingMove.move.add(25);
-        }
+        // if (ongoingMove.move.length() == 8) {
+        // matchView.setMatch(state.match, state.ongoingMove);
+        // return;
+        // }
 
-        ongoingMove.move.add(field);
+        // boolean chequerOnBar =
+        // state.match.getPlayer(state.match.own).field.getChequers(25) > 0;
 
-        if (AllMoves.isValidStart(state.allMoves, ongoingMove.move)) {
-            ongoingMove.highlightedPip = matchView.getOwnWhite() ? 25 - field : field;
-        }
+        // if (chequerOnBar) {
+        // ongoingMove.move.add(25);
+        // }
 
-        ongoingMove.move.removeLast();
+        // ongoingMove.move.add(field);
 
-        if (chequerOnBar) {
-            ongoingMove.move.removeLast();
-        }
+        // if (AllMoves.isValidStart(state.allMoves, ongoingMove.move)) {
+        // ongoingMove.highlightedPip = fieldInMatchViewPerspective(field);
+        // }
 
-        matchView.setMatch(state.match, state.ongoingMove);
+        // ongoingMove.move.removeLast();
+
+        // if (chequerOnBar) {
+        // ongoingMove.move.removeLast();
+        // }
+
+        // matchView.setMatch(state.match, state.ongoingMove);
     }
 
     public void pipExited(int field) {
@@ -218,7 +212,10 @@ public class OwnMove implements MatchViewListener {
     private void undoWithoutClear() {
         var move = state.ongoingMove.move;
         var hits = state.ongoingMove.hits;
-        assert (move.length() == hits.length());
+        if ((move.length() << 1) != hits.length()) {
+            System.err.println("move.length() " + move.length() + "  hits.length() " + hits.length());
+        }
+        assert (move.length() == (hits.length() << 1));
 
         for (int i = hits.length() - 1; i >= 0; --i) {
             Field active = state.match.getPlayer(state.match.active).field;
@@ -236,16 +233,16 @@ public class OwnMove implements MatchViewListener {
     }
 
     /**
-     * @param ownFrom - index from own perspective
-     * @param ownTo   - index from own perspective
+     * @param activeFrom - index from active's perspective
+     * @param activeTo   - index from active's perspective
      */
-    private void moveChequer(Field own, int ownFrom, int ownTo) {
-        if (own.getChequers(ownFrom) < 1) {
-            throw new IllegalArgumentException("own contains no chequer on ownFrom");
+    private void moveChequer(Field active, int activeFrom, int activeTo) {
+        if (active.getChequers(activeFrom) < 1) {
+            throw new IllegalArgumentException("own contains no chequer on activeFrom");
         }
 
-        changeField(own, ownFrom, -1);
-        changeField(own, ownTo, 1);
+        changeField(active, activeFrom, -1);
+        changeField(active, activeTo, 1);
     }
 
     private void changeField(Field f, int index, int diff) {
@@ -263,14 +260,100 @@ public class OwnMove implements MatchViewListener {
     @Override
     public void mousePressed(MouseEvent e) {
         matchView.requestFocus();
+        int x = e.getX();
+        int y = e.getY();
+        tmpDragMove.clear();
+        int pressedField = matchView.containingField(x, y);
+        System.out.println("pressedField " + pressedField);
+        if (pressedField != -1) {
+            tmpDragMove.add(fieldInOwnPerspective(pressedField));
+        }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        System.out.println("mouseReleased: e=" + e);
+        int releasedField = matchView.containingField(e.getX(), e.getY());
+        System.out.println("releasedField " + releasedField);
+        if (releasedField == -1 || tmpDragMove.length() == 0) {
+            // abort
+            tmpDragMove.clear();
+            return;
+        }
+
+        tmpDragMove.add(fieldInOwnPerspective(releasedField));
+        int bigDie = state.match.roll.die1();
+        int smallDie = state.match.roll.die2();
+        if (bigDie < smallDie) {
+            int tmp = bigDie;
+            bigDie = smallDie;
+            smallDie = tmp;
+        }
+        Move.split(smallDie, bigDie, tmpDragMove, state.match.getPlayer(1 - state.match.active).field,
+                tmpSplitDragMove);
+        int ongoingMoveSize = state.ongoingMove.move.length();
+
+        int newSteps = tmpSplitDragMove.length();
+
+        System.out.println("tmpSplitDragMove: " + tmpSplitDragMove.append(null));
+
+        if (ongoingMoveSize + newSteps > state.ongoingMove.move.capacity()) {
+            // Illegal move
+            tmpDragMove.clear();
+            return;
+        }
+        {
+            int i = 0;
+            while (i + 1 < newSteps) {
+                int from = tmpSplitDragMove.at(i++);
+                int to = tmpSplitDragMove.at(i++);
+                tryPartMove(from, from - to);
+            }
+        }
+
+        matchView.setMatch(state.match, state.ongoingMove);
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        int field = matchView.containingField(x, y);
+        if (field != -1) {
+            pipClicked(fieldInOwnPerspective(field), e.getButton());
+        }
+    }
+
+    private int fieldInOwnPerspective(int fieldInMatchViewPerspective) {
+        return matchView.getOwnWhite() ? 25 - fieldInMatchViewPerspective : fieldInMatchViewPerspective;
+    }
+
+    private int fieldInMatchViewPerspective(int fieldInOwnPerspective) {
+        return matchView.getOwnWhite() ? 25 - fieldInOwnPerspective : fieldInOwnPerspective;
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseMovedOrDragged(e);
+    }
+
+    private void mouseMovedOrDragged(MouseEvent e) {
+        int x = e.getX();
+        int y = e.getY();
+        int field = matchView.containingField(x, y);
+        if (state.ongoingMove.hoveredField != -1 && field != state.ongoingMove.hoveredField) {
+            pipExited(state.ongoingMove.hoveredField);
+            state.ongoingMove.hoveredField = -1;
+        }
+        if (state.ongoingMove.hoveredField == -1 && field != -1) {
+            state.ongoingMove.hoveredField = field;
+            pipEntered(matchView.getOwnWhite() ? 25 - state.ongoingMove.hoveredField : state.ongoingMove.hoveredField);
+        }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        mouseMovedOrDragged(e);
     }
 
     @Override
@@ -287,7 +370,8 @@ public class OwnMove implements MatchViewListener {
                     System.out.println("yes, valid");
                     matchView.setListener(null);
                     undoWithoutClear();
-                    // Move.run(state.match, state.ongoingMove.move); // incl. evtl. neuem spiel oder state.matchende
+                    // Move.run(state.match, state.ongoingMove.move); // incl. evtl. neuem spiel
+                    // oder state.matchende
                     cb.done();
                 } else {
                     System.out.println("no, not valid");

@@ -31,6 +31,12 @@ public class WorkerState implements Mutable<WorkerState> {
             return new MutableIntArray(1024);
         }
     };
+    public final MutableArray<MutableIntArray> tmp2 = new MutableArray<>(1) {
+        @Override
+        protected MutableIntArray createInstance() {
+            return new MutableIntArray(8);
+        }
+    };
     /**
      * neu in version 2
      */

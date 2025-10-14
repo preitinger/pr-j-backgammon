@@ -1,5 +1,8 @@
 package pr.backgammon.jokers.control;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
 
@@ -16,7 +19,7 @@ public class JokersUploader {
     private static final String BG_ACC_ID = "68a16d928aa2132d2989b03d";
     private static final String GLOBAL_ACC_ID = BG_ACC_ID;
 
-    private static final int VERSION_MAIN = 0, VERSION_SUB = 55;
+    // private static final int VERSION_MAIN = 0, VERSION_SUB = 57;
     private static final String BASE_URL = "https://pr-home-beryl.vercel.app";
 
     /**
@@ -36,7 +39,7 @@ public class JokersUploader {
         var resp = client.postJson(BASE_URL + "/api/countRolls/myUser", builder.build().toString());
         System.out.println("resp: " + resp);
         var reader = Json.createReader(new StringReader(resp));
-        
+
         JsonValue val = reader.readObject();
         switch (val.getValueType()) {
             case OBJECT:
@@ -66,7 +69,7 @@ public class JokersUploader {
     }
 
     private static String jokerUploadRequest(String globalAccId, String player1, String player2, AllJokers jokers1,
-            AllJokers jokers2) {
+            AllJokers jokers2) throws IOException {
         JsonArray jokers1Json = jokers1.toJson();
         JsonArray jokers2Json = jokers2.toJson();
 
@@ -80,9 +83,33 @@ public class JokersUploader {
         return json.toString();
     }
 
-    private static JsonObjectBuilder addVersion(JsonObjectBuilder b) {
-        b.add("version", Json.createObjectBuilder().add("main", VERSION_MAIN).add("sub", VERSION_SUB));
+    private static JsonObjectBuilder addVersion(JsonObjectBuilder b) throws IOException {
+        Version version = readVersionFromPrHome();
+        b.add("version", Json.createObjectBuilder().add("main", version.main).add("sub", version.sub));
         return b;
     }
 
+    private static Version readVersionFromPrHome() throws IOException {
+        File f = new File("../pr-home/local/lastVersion.txt");
+        BufferedReader r = new BufferedReader(new FileReader(f));
+        try {
+            var line = r.readLine();
+            var numbers = line.split(" ");
+            if (numbers.length != 2) {
+                throw new IllegalStateException("Unerwartete Zeile in ../pr-home/local/version.txt: '" + line + "'");
+            }
+
+            Version v = new Version();
+            v.main = Integer.parseInt(numbers[0]);
+            v.sub = Integer.parseInt(numbers[1]);
+            return v;
+        } finally {
+            r.close();
+        }
+    }
+
+    static class Version {
+        int main;
+        int sub;
+    }
 }

@@ -12,5 +12,5 @@ echo "args: ${args}"
 args2=$(find pr -name '*.java')
 echo "args2: ${args2}"
 
-javac -cp ~/javaee/glassfish5/glassfish/modules/javax.json.jar $args2
+javac -cp ~/javaee/glassfish5/glassfish/modules/javax.json.jar:lib/opencv-4130.jar:. $args2
 

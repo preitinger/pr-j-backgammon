@@ -1,6 +1,6 @@
 package pr.backgammon.spin;
 
-import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.util.ArrayList;
 
@@ -23,6 +23,7 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
     private Field fieldOwn = new Field(), fieldOpp = new Field();
     private Field lastFieldOwn = new Field(), lastFieldOpp = new Field();
     private int die1 = 0, die2 = 0;
+    private BufferedImage board = null;
     private Raster boardRaster = null;
     private int pendingRedouble = 0;
 
@@ -212,7 +213,7 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
     }
 
     private void fields() {
-        fastChequerSearch.init(boardRaster);
+        fastChequerSearch.init(board);
         fastChequerSearch.getFields(fieldOwn, fieldOpp);
     }
 
@@ -226,8 +227,8 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
     }
 
     private void boardShot() {
-        var shot = s.boardShot();
-        this.boardRaster = shot.getRaster();
+        this.board = s.boardShot();
+        this.boardRaster = board.getRaster();
 
     }
 
@@ -241,7 +242,7 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
             waitForOwnRoll();
         }
         assert (die1 >= 1 && die1 <= 6 && die2 >= 1 && die2 <= 6);
-        fastChequerSearch.init(boardRaster);
+        fastChequerSearch.init(board);
         fastChequerSearch.getFields(fieldOwn, fieldOpp);
 
         // Warten bis der initiale Wurf oder die eigenen Wuerfel nicht mehr sichtbar
@@ -260,36 +261,36 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
                 case MATCH_END:
                     return OwnMoveRes.GAME_END;
                 case DLG: {
-                    if (s.verdoppelnOpp.run(boardRaster) != null) {
-                        // Gegner bietet wahrscheinlich mit Auto-Doppeln Verdopplung an, bevor wir
-                        // wissen, was unser eigener Wurf war.
-                        // Also erst unsere Antwort auf das Doppeln ermitteln und dann wenn der Dialog
-                        // nicht mehr die Steine verdeckt
-                        // unseren Zug vor dem Doppeln ermitteln und diesen senden und anschließend das
-                        // Doppeln und unsere Antwort darauf
-                        switch (observeDoubleDlg()) {
-                            case TAKE:
-                                // Warten bis Dialogecke weg, dann Feld ermitteln dann Zug ermitteln, dann
-                                // eigenen Zug, Double und Take senden
-                                pendingDoubleTake = true;
-                                // in naechstem Schleifendurchlauf wird das Warten auf das Ende des Wurfs fortgesetzt
-                                // und dann hoffentlich bei
-                                // case REGULAR fortgesetzt.
-                                break;
-                            case REDOUBLE:
-                                ++pendingRedouble;
-                                // detectAndSendLastMove();
-                                // Die Antwort auf unser redouble wird dann im folgenden aufruf von opp
-                                throw new RuntimeException("nyi");
-                            case DROP:
-                                // Wenn der eigene Spieler das schnelle Doppel des Gegners ablehnt, wird danach
-                                // gleich das Brett fuer
-                                // die naechste Runde mit Initialposition angezeigt.
-                                // Also Platzhaltermove mit Liste aller moeglichen Zuege senden.
-                                // In der GUI wird dann ein Zug ausgewaehlt bevor der Move geschrieben wird.
-                                throw new RuntimeException("nyi");
-                        }
-                    } /* else if () */
+                    // if (s.verdoppelnOpp.run(boardRaster) != null) {
+                    //     // Gegner bietet wahrscheinlich mit Auto-Doppeln Verdopplung an, bevor wir
+                    //     // wissen, was unser eigener Wurf war.
+                    //     // Also erst unsere Antwort auf das Doppeln ermitteln und dann wenn der Dialog
+                    //     // nicht mehr die Steine verdeckt
+                    //     // unseren Zug vor dem Doppeln ermitteln und diesen senden und anschließend das
+                    //     // Doppeln und unsere Antwort darauf
+                    //     switch (observeDoubleDlg()) {
+                    //         case TAKE:
+                    //             // Warten bis Dialogecke weg, dann Feld ermitteln dann Zug ermitteln, dann
+                    //             // eigenen Zug, Double und Take senden
+                    //             pendingDoubleTake = true;
+                    //             // in naechstem Schleifendurchlauf wird das Warten auf das Ende des Wurfs fortgesetzt
+                    //             // und dann hoffentlich bei
+                    //             // case REGULAR fortgesetzt.
+                    //             break;
+                    //         case REDOUBLE:
+                    //             ++pendingRedouble;
+                    //             // detectAndSendLastMove();
+                    //             // Die Antwort auf unser redouble wird dann im folgenden aufruf von opp
+                    //             throw new RuntimeException("nyi");
+                    //         case DROP:
+                    //             // Wenn der eigene Spieler das schnelle Doppel des Gegners ablehnt, wird danach
+                    //             // gleich das Brett fuer
+                    //             // die naechste Runde mit Initialposition angezeigt.
+                    //             // Also Platzhaltermove mit Liste aller moeglichen Zuege senden.
+                    //             // In der GUI wird dann ein Zug ausgewaehlt bevor der Move geschrieben wird.
+                    //             throw new RuntimeException("nyi");
+                    //     }
+                    // } /* else if () */
                     break;
                 }
                 case REGULAR:
@@ -310,20 +311,21 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
      * Dialog bereits wieder unsichtbar ist.
      */
     DoubleDlgRes observeDoubleDlg() throws InterruptedException {
-        do {
-            Thread.sleep(10);
-            boardShot(); // TODO ggf. Optimierung notwendig durch kleineren Screenshot und dann angabe
-                         // eines passenden clips im run
-            if (s.annehmen.run(boardRaster) != null) {
-                return DoubleDlgRes.TAKE;
-            }
-            if (s.verdoppeln.run(boardRaster) != null) {
-                return DoubleDlgRes.REDOUBLE;
-            }
-            if (s.aufgeben.run(boardRaster) != null) {
-                return DoubleDlgRes.DROP;
-            }
-        } while (true);
+        throw new RuntimeException("Unsupported");
+        // do {
+        //     Thread.sleep(10);
+        //     boardShot(); // TODO ggf. Optimierung notwendig durch kleineren Screenshot und dann angabe
+        //                  // eines passenden clips im run
+        //     if (s.annehmen.run(boardRaster) != null) {
+        //         return DoubleDlgRes.TAKE;
+        //     }
+        //     if (s.verdoppeln.run(boardRaster) != null) {
+        //         return DoubleDlgRes.REDOUBLE;
+        //     }
+        //     if (s.aufgeben.run(boardRaster) != null) {
+        //         return DoubleDlgRes.DROP;
+        //     }
+        // } while (true);
     }
 
     private static enum WaitUntilNotRollRes {
@@ -348,66 +350,68 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
     }
 
     private WaitUntilNotRollRes waitUntilNotInitialRoll() throws InterruptedException {
+        throw new RuntimeException("Unsupported");
 
-        // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
-        // testen
+        // // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
+        // // testen
 
-        do {
-            Thread.sleep(500);
-            boardShot();
-            if (s.sideVerlassen.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.MATCH_END;
-            }
-            if (s.dlgCorner.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.DLG;
-            }
-            spinRolls.detectFromBoardShot(boardRaster);
-            if (!spinRolls.isInitialDice())
-                return WaitUntilNotRollRes.REGULAR;
-        } while (true);
+        // do {
+        //     Thread.sleep(500);
+        //     boardShot();
+        //     if (s.sideVerlassen.run(boardRaster) != null) {
+        //         return WaitUntilNotRollRes.MATCH_END;
+        //     }
+        //     if (s.dlgCorner.run(boardRaster) != null) {
+        //         return WaitUntilNotRollRes.DLG;
+        //     }
+        //     spinRolls.detectFromBoardShot(board);
+        //     if (!spinRolls.isInitialDice())
+        //         return WaitUntilNotRollRes.REGULAR;
+        // } while (true);
     }
 
     private WaitUntilNotRollRes waitUntilNotOwnRoll() throws InterruptedException {
+        throw new RuntimeException("Unsupported");
 
-        // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
-        // testen
+        // // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
+        // // testen
 
-        do {
-            Thread.sleep(500);
-            boardShot();
-            if (s.sideVerlassen.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.MATCH_END;
-            }
-            if (s.dlgCorner.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.DLG;
-            }
-            spinRolls.detectFromBoardShot(boardRaster);
-            if (!spinRolls.isOwnDice())
-                return WaitUntilNotRollRes.REGULAR;
-        } while (true);
-
-    }
-
-    private WaitUntilNotRollRes waitUntilNotOppRoll() throws InterruptedException {
-
-        // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
-        // testen
-
-        do {
-            Thread.sleep(500);
-            boardShot();
-            if (s.sideVerlassen.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.MATCH_END;
-            }
-            if (s.dlgCorner.run(boardRaster) != null) {
-                return WaitUntilNotRollRes.DLG;
-            }
-            spinRolls.detectFromBoardShot(boardRaster);
-            if (!spinRolls.isOppDice())
-                return WaitUntilNotRollRes.REGULAR;
-        } while (true);
+        // do {
+        //     Thread.sleep(500);
+        //     boardShot();
+        //     if (s.sideVerlassen.run(boardRaster) != null) {
+        //         return WaitUntilNotRollRes.MATCH_END;
+        //     }
+        //     if (s.dlgCorner.run(boardRaster) != null) {
+        //         return WaitUntilNotRollRes.DLG;
+        //     }
+        //     spinRolls.detectFromBoardShot(board);
+        //     if (!spinRolls.isOwnDice())
+        //         return WaitUntilNotRollRes.REGULAR;
+        // } while (true);
 
     }
+
+    // private WaitUntilNotRollRes waitUntilNotOppRoll() throws InterruptedException {
+
+    //     // muss auch mit abgelaufener zeit zurecht kommen, also auch auf verlassen
+    //     // testen
+
+    //     do {
+    //         Thread.sleep(500);
+    //         boardShot();
+    //         if (s.sideVerlassen.run(boardRaster) != null) {
+    //             return WaitUntilNotRollRes.MATCH_END;
+    //         }
+    //         if (s.dlgCorner.run(boardRaster) != null) {
+    //             return WaitUntilNotRollRes.DLG;
+    //         }
+    //         spinRolls.detectFromBoardShot(board);
+    //         if (!spinRolls.isOppDice())
+    //             return WaitUntilNotRollRes.REGULAR;
+    //     } while (true);
+
+    // }
 
     private void oppMove(boolean initialRoll) {
         if (pendingRedouble > 0) {
@@ -432,15 +436,17 @@ public class TrackBoard extends SwingWorker<Void, TrackBoardMsg> {
     }
 
     private void waitForCanLeave() throws InterruptedException {
-        do {
-            boardShot();
-            Point p = s.sideVerlassen.run(boardRaster);
-            if (p == null) {
-                Thread.sleep(1000);
-            } else {
-                return;
-            }
-        } while (true);
+        throw new RuntimeException("Unsupported");
+
+        // do {
+        //     boardShot();
+        //     Point p = s.sideVerlassen.run(boardRaster);
+        //     if (p == null) {
+        //         Thread.sleep(1000);
+        //     } else {
+        //         return;
+        //     }
+        // } while (true);
 
     }
 

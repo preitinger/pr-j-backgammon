@@ -13,6 +13,7 @@ import pr.backgammon.spin.control.CalibrationForSpin;
 import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.MatchWorker;
 import pr.backgammon.spin.control.SpinRolls;
+import pr.backgammon.spin.control.TemplateSearchers;
 import pr.backgammon.spin.model.WaitForOppMoveBug;
 import pr.backgammon.spin.model.WorkerState;
 import pr.control.Tools;
@@ -21,21 +22,24 @@ import pr.model.MutableIntArray;
 public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
     private final CalibrationForSpin cal;
     private final BoardSearchers bs;
+    private final TemplateSearchers ts;
     private final SpinRolls spinRolls;
     private int savedFiles = 0;
 
-    public WaitForOppMove(CalibrationForSpin cal, BoardSearchers bs, SpinRolls spinRolls) {
+    public WaitForOppMove(CalibrationForSpin cal, BoardSearchers bs, TemplateSearchers ts, SpinRolls spinRolls) {
         this.cal = cal;
         this.bs = bs;
+        this.ts = ts;
         this.spinRolls = spinRolls;
     }
 
     @Override
     public WaitForOppMoveRes doIt() throws Exception {
+        System.out.println("\n***** WAIT FOR OPP MOVE\n");
         WaitForOppMoveRes res = new WaitForOppMoveRes();
         res.cal = cal;
         res.spinRolls = spinRolls;
-        res.chequers = new FastChequerSearch(cal);
+        res.chequers = new FastChequerSearch(cal, ts);
 
         System.out.println("match.active vor AllMoves.find: " + state.match.active);
         AllMoves.find(state.match, state.allMoves, state.findTaskArray);
@@ -246,10 +250,11 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
 
         do {
             Thread.sleep(50);
-            var board = bs.boardShot().getRaster();
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
 
-            if (bs.dlgCorner.run(board) != null) {
-                int resign = bs.searchOppResign(board);
+            if (ts.visible(ts.dlgCorner, board)) {
+                int resign = ts.searchOppResign(board);
                 if (resign > 0) {
                     match.offerResign(1 - match.own, resign);
                     return res;
@@ -310,11 +315,12 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
             // eigenen wurf danach gibt, bei dem wir nicht ziehen koennen. Sonst besteht
             // Risiko, dass eigener wurf waehrend
             // dieses sleeps verpasst wird!
-            Thread.sleep(500); // das ist hier vor allem zu lang! ;-) - solange
-            var board = bs.boardShot().getRaster();
+            Thread.sleep(50); // das ist hier vor allem zu lang! ;-) - solange
+            var board = bs.boardShot();
+            // var boardRaster = board.getRaster();
 
-            if (bs.dlgCorner.run(board) != null) {
-                int resign = bs.searchOppResign(board);
+            if (ts.visible(ts.dlgCorner, board)) {
+                int resign = ts.searchOppResign(board);
                 if (resign > 0) {
                     match.offerResign(1 - match.own, resign);
                     return res;
@@ -335,7 +341,7 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
                     continue;
                 }
 
-                if (oldOppOff >= Field.NUM_ALL_CHEQUERS - 2 && newOpp.getChequers(0) == 0) {
+                if (oldOppOff >= Field.NUM_ALL_CHEQUERS - 4 && newOpp.getChequers(0) == 0) {
                     // Gegner hat alle raus gespielt und nun Brett der naechsten Runde sichtbar.
                     // Suche zufaelligen Zug aus allMoves, der alle Steine raus spielt.
 
@@ -352,7 +358,7 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
 
             spinRolls.detectFromBoardShot(board);
             if (spinRolls.isOwnDice() || (!spinRolls.isOppDice() && !spinRolls.isInitialDice())
-                    || bs.sideVerlassen.run(board) != null) {
+                    || ts.visible(ts.bVerlassen, board)) {
 
                 res.chequers.init(board);
                 res.chequers.getFields(newOwn, newOpp);
@@ -399,14 +405,12 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
         matchCopy.set(match);
 
         for (int i = 0; i < nMoves; ++i) {
-            System.out.println("i  " + i);
             var move = state.allMoves.at(i);
             Move.run(match, move);
             if (match.getPlayer(match.own).field.equals(newOwn)
                     && match.getPlayer(1 - match.own).field.equals(newOpp)) {
                 return move;
             } else {
-                System.out.println("vor match.set(matchCopy): matchCopy.active  " + matchCopy.active);
                 match.set(matchCopy);
             }
         }
@@ -419,8 +423,10 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
             bug.newOwn.set(newOwn);
 
             try {
+                String bugFile = "WaitForOppMoveBug_" + Tools.dateTimeString();
+                System.out.println("Save " + bugFile);
                 ObjectOutputStream os = new ObjectOutputStream(
-                        new FileOutputStream("WaitForOppMoveBug_" + Tools.dateTimeString()));
+                        new FileOutputStream(bugFile));
                 os.writeObject(bug);
                 os.close();
             } catch (IOException ex) {

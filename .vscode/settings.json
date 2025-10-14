@@ -6,6 +6,11 @@
         "."
     ],
     "java.project.referencedLibraries": [
-        "/home/peter/javaee/glassfish5/glassfish/modules/javax.json.jar"
-    ]
+        "/home/peter/javaee/glassfish5/glassfish/modules/javax.json.jar",
+        "lib/opencv-4130.jar"
+    ],
+    "terminal.integrated.env.osx": {
+        "GTK_PATH": "",
+        "BLA": "BLUBB"
+    }
 }

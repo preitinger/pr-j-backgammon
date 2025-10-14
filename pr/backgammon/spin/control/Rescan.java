@@ -2,7 +2,8 @@ package pr.backgammon.spin.control;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.Raster;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -30,22 +31,29 @@ public class Rescan {
     private final Match match;
     private final BoardSearchers bs;
     private final SpinRolls spinRolls;
+    private final TemplateSearchers ts;
     private final RescanCb cb;
     private final RescanDlg dlg;
 
     public Rescan(ArrayList<GnuCmd> commands, Match match, JFrame parent, BoardSearchers bs, SpinRolls spinRolls,
+            TemplateSearchers ts,
             RescanCb cb) {
         this.commands = commands;
         this.match = match;
         this.bs = bs;
         this.spinRolls = spinRolls;
+        this.ts = ts;
         this.cb = cb;
         dlg = new RescanDlg(parent);
         dlg.setVisible(true);
         dlg.scan.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                scanClicked();
+                try {
+                    scanClicked();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         dlg.cancel.addActionListener(new ActionListener() {
@@ -57,12 +65,13 @@ public class Rescan {
         });
     }
 
-    private void scanClicked() {
+    private void scanClicked() throws IOException {
         cb.onOk();
         closeDlg();
 
-        var board = bs.boardShot().getRaster();
-        FastChequerSearch chequers = new FastChequerSearch(bs.cal);
+        var board = bs.boardShot()/* .getRaster() */;
+        // var boardRaster = board.getRaster();
+        FastChequerSearch chequers = new FastChequerSearch(bs.cal, ts);
         chequers.init(board);
         Field ownField = match.getPlayer(match.own).field;
         Field oppField = match.getPlayer(1 - match.own).field;
@@ -83,6 +92,7 @@ public class Rescan {
         cb.startWorker(new ChatTextViaClipboard(500) {
             @Override
             public void resultOnEventDispatchThread(String s) {
+                System.out.println("rescan: result from chat text: '" + s + "'");
                 final String state = "\n[server]: Spielstand ";
                 final String end = "\n[server]: Endstand";
                 final String crawford = "\n[server]: Aufgrund der Crawford-Regel";
@@ -91,10 +101,12 @@ public class Rescan {
                 final int posCrawford = s.lastIndexOf(crawford);
                 match.crawfordRound = posCrawford > posState && posCrawford > posEnd;
 
+                System.out.println("posState " + posState + "  posEnd " + posEnd);
+
                 if (posState == -1 || posEnd > posState) {
                     match.getPlayer(0).score = match.getPlayer(1).score = 0;
                     addCommands();
-                    closeDlg();
+                    // closeDlg();
                     cb.done();
                     return;
                 }
@@ -103,13 +115,13 @@ public class Rescan {
                 int after = posState + state.length();
                 int colon = s.indexOf(':', after);
                 if (colon == -1) {
-                    closeDlg();
+                    // closeDlg();
                     cb.error("Unerwarteter Inhalt nach \"" + state + "\" im Chat.");
                     return;
                 }
                 int space = s.indexOf(' ', colon + 1);
                 if (space == -1) {
-                    closeDlg();
+                    // closeDlg();
                     cb.error("Unerwarteter Inhalt nach \"" + state + "\" im Chat.");
                     return;
                 }
@@ -123,8 +135,9 @@ public class Rescan {
                     match.getPlayer(playerWhite).score = scoreWhite;
                     match.getPlayer(playerBlack).score = scoreBlack;
                     addCommands();
+                    cb.done();
                 } catch (NumberFormatException ex) {
-                    closeDlg();
+                    // closeDlg();
                     cb.error("Unerwartete Spielstandtexte im Chat: '" + scoreWhiteStr + "' und '"
                             + scoreBlackStr + "'.");
                     return;
@@ -170,8 +183,8 @@ public class Rescan {
         }
     }
 
-    private void scanCube(Raster board) {
-        ScanUtils.scanCube(board, match, bs);
+    private void scanCube(BufferedImage board) throws IOException {
+        ScanUtils.scanCube(board, match, bs, ts);
         // Cube cube = match.cube;
         // cube.used = false;
         // cube.value = 1;

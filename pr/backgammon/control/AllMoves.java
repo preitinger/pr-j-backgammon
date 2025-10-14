@@ -22,6 +22,8 @@ public class AllMoves {
             Field factive = match.getPlayer(match.active).getField();
             Field fother = match.getPlayer(other).getField();
             findAllMoves(factive, fother, match.roll.die1, match.roll.die2, out, todo);
+        } else {
+            System.out.println("\n*** ALLMOVES.FIND() SKIPPED BECAUSE NOBODY ACTIVE OR ROLL IS EMPTY!\n");
         }
     }
 
@@ -33,8 +35,10 @@ public class AllMoves {
             MutableArray<MutableIntArray> out,
             FindTaskArray todo) {
 
-        System.out.println("findAllMoves:\nactive:\n" + active.append(null).toString() + "\nother:\n"
-                + other.append(null).toString());
+        long start = System.currentTimeMillis();
+
+        // System.out.println("findAllMoves:\nactive:\n" + active.append(null).toString() + "\nother:\n"
+                // + other.append(null).toString());
         out.clear();
         todo.clear();
         // MutableIntArray tmp = new MutableIntArray(15);
@@ -71,12 +75,12 @@ public class AllMoves {
         while (todo.length() > 0) {
             currentTask.clear();
             todo.move(0, currentTask);
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Run task:\n");
-                currentTask.at(0).append(sb);
-                System.out.println(sb.toString());
-            }
+            // {
+            //     StringBuilder sb = new StringBuilder();
+            //     sb.append("Run task:\n");
+            //     currentTask.at(0).append(sb);
+            //     System.out.println(sb.toString());
+            // }
             if (currentTask.length() != 1)
                 throw new IllegalStateException();
             int ndice = currentTask.at(0).availableDice.length();
@@ -165,6 +169,9 @@ public class AllMoves {
             // out.swapOut(i);
             // }
         }
+
+        long end = System.currentTimeMillis();
+        System.out.println("AllMoves.findAllMoves() took " + (end - start) + "ms.");
     }
 
     /**

@@ -16,7 +16,8 @@
             "name": "Test",
             "request": "launch",
             "mainClass": "pr.backgammon.Test",
-            "projectName": "pr-j-backgammon_b619b38e"
+            "projectName": "pr-j-backgammon_b619b38e",
+            "args": "-ea"
         },
         {
             "type": "java",

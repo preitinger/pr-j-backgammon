@@ -1,5 +1,8 @@
 package pr.control;
 
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+
 import javax.swing.SwingWorker;
 
 public abstract class MyWorker<T, V> extends SwingWorker<T, V> {
@@ -26,4 +29,16 @@ public abstract class MyWorker<T, V> extends SwingWorker<T, V> {
     }
 
     public abstract T doIt() throws Exception;
+
+    public final void join() throws InterruptedException {
+        try {
+            get();
+        } catch (ExecutionException e) {
+            // Catch silently because we are not interested in the exact result.
+            // join() is called to give short pending actions, as save small data to a storage, time before the application is exited.
+        } catch (CancellationException e) {
+            // Catch silently because we are not interested in the exact result.
+            // join() is called to give short pending actions, as save small data to a storage, time before the application is exited.
+        }
+    }
 }

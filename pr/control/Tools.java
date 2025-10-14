@@ -80,7 +80,7 @@ public class Tools {
             }
         });
         f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        f.setPreferredSize(new Dimension(1000, 800));
+        f.setPreferredSize(new Dimension(Math.min(1000, img.getWidth() + 500), Math.min(800, img.getHeight() + 100)));
         f.pack();
         f.setVisible(true);
         if (wait) {
@@ -132,6 +132,8 @@ public class Tools {
 
     public static int countColorRange(Raster raster, Rectangle r, int minColor, int maxColor) {
         int n = 0;
+        // // System.out.println("countColorRange: raster width " + raster.getWidth() + "  raster height " + raster.getHeight());
+        // System.out.println("r: " + r);
 
         int left = r.x;
         int right = left + r.width;

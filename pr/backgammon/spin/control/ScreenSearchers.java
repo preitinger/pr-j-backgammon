@@ -11,16 +11,16 @@ import pr.control.Searcher;
 public class ScreenSearchers {
     public ScreenSearchers(Rectangle wholeScreen) throws IOException {
         this.wholeScreen = wholeScreen;
-        spiele = standardSearcher("spiele", wholeScreen);
-        neuesSpiel = standardSearcher("neuesSpiel", wholeScreen);
-        unsichtbaresSpiel = standardSearcher("unsichtbaresSpiel", wholeScreen);
-        spielAnlegen = standardSearcher("spielAnlegen", wholeScreen);
+        // spiele = standardSearcher("spiele", wholeScreen);
+        // neuesSpiel = standardSearcher("neuesSpiel", wholeScreen);
+        // unsichtbaresSpiel = standardSearcher("unsichtbaresSpiel", wholeScreen);
+        // spielAnlegen = standardSearcher("spielAnlegen", wholeScreen);
 
-        enterWhite = standardSearcher("enterWhite", wholeScreen);
-        enterBlack = standardSearcher("enterBlack", wholeScreen);
+        // enterWhite = standardSearcher("enterWhite", wholeScreen);
+        // enterBlack = standardSearcher("enterBlack", wholeScreen);
 
-        bVerlassen = standardSearcher("bVerlassen", wholeScreen);
-        bSchliessen = standardSearcher("bSchliessen", wholeScreen);
+        // bVerlassen = standardSearcher("bVerlassen", wholeScreen);
+        // bSchliessen = standardSearcher("bSchliessen", wholeScreen);
 
     }
 
@@ -32,9 +32,9 @@ public class ScreenSearchers {
         return MyRobot.shot(wholeScreen);
     }
 
-    public final ScreenSearcher spiele, neuesSpiel, unsichtbaresSpiel, spielAnlegen,
-    enterWhite, enterBlack,
-    bVerlassen, bSchliessen;
+    // public final ScreenSearcher spiele, neuesSpiel, unsichtbaresSpiel, spielAnlegen,
+    // enterWhite, enterBlack,
+    // bVerlassen, bSchliessen;
 
     private final Rectangle wholeScreen;
 

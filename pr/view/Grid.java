@@ -58,6 +58,12 @@ public class Grid  implements IGrid {
         return weight;
     }
 
+    public final IAnchor anchor = new Anchor();
+
+    public final IAnchor anchor() {
+        return anchor;
+    }
+
     public final IFill fill = new Fill();
 
     public final IFill fill() {
@@ -110,5 +116,45 @@ public class Grid  implements IGrid {
         public void bottom(int v) {
             constraints.insets.bottom = v;
         }
+    }
+
+    public class Anchor implements IAnchor {
+        @Override
+        public void center() {
+            constraints.anchor = GridBagConstraints.CENTER;
+        }
+        @Override
+        public void east() {
+            constraints.anchor = GridBagConstraints.EAST;
+        }
+        @Override
+        public void north() {
+            constraints.anchor = GridBagConstraints.NORTH;
+        }
+        @Override
+        public void northEast() {
+            constraints.anchor = GridBagConstraints.NORTHEAST;
+        }
+        @Override
+        public void northWest() {
+            constraints.anchor = GridBagConstraints.NORTHWEST;
+        }
+        @Override
+        public void south() {
+            constraints.anchor = GridBagConstraints.SOUTH;
+        }
+        @Override
+        public void southEast() {
+            constraints.anchor = GridBagConstraints.SOUTHEAST;
+        }
+        @Override
+        public void west() {
+            constraints.anchor = GridBagConstraints.WEST;
+        }
+        @Override
+        public void southWest() {
+            constraints.anchor = GridBagConstraints.SOUTHWEST;
+        }
+        
     }
 }

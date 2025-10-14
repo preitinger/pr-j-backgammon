@@ -17,6 +17,7 @@ public interface IGrid {
     public IWeight weight();
     public IFill fill();
     public IInsets insets();
+    public IAnchor anchor();
 
     interface IWeight {
         void x(double v);
@@ -35,5 +36,17 @@ public interface IGrid {
         void left(int v);
         void right(int v);
         void bottom(int v);
+    }
+
+    interface IAnchor {
+        void center();
+        void north();
+        void east();
+        void south();
+        void west();
+        void northEast();
+        void southEast();
+        void northWest();
+        void southWest();
     }
 }

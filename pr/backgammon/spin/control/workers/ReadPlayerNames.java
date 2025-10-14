@@ -1,31 +1,37 @@
 package pr.backgammon.spin.control.workers;
 
 import java.awt.Point;
-import java.awt.image.Raster;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 import pr.backgammon.spin.control.BoardSearchers;
+import pr.backgammon.spin.control.TemplateSearchers;
 import pr.control.MyRobot;
 import pr.control.MyWorker;
 
 public abstract class ReadPlayerNames extends MyWorker<Void, Void> {
     private final BoardSearchers s;
-    private final Raster board;
+    private final TemplateSearchers ts;
+    private final BufferedImage board;
     private final String[] playerNames;
 
     /**
      * @param outPlayerNames - length must be 2; white name will be set in 0 if any; black name in 1 if any.
      */
-    public ReadPlayerNames(BoardSearchers s, Raster board, String[] outPlayerNames) {
+    public ReadPlayerNames(BoardSearchers s, TemplateSearchers ts, BufferedImage board, String[] outPlayerNames) {
         this.s = s;
+        this.ts = ts;
         this.board = board;
         this.playerNames = outPlayerNames;
     }
-    public static void runIt(BoardSearchers s, Raster board, String[] playerNames) throws InterruptedException {
+    public static void runIt(BoardSearchers s, TemplateSearchers ts, BufferedImage board, String[] playerNames) throws InterruptedException, IOException {
 
-        Point posWhite = s.playerBoxWhite.run(board);
-        Point posBlack = s.playerBoxBlack.run(board);
-        Point posWhiteReady = s.playerBoxWhiteReady.run(board);
-        Point posBlackReady = s.playerBoxBlackReady.run(board);
+        // TODO fix
+
+        Point posWhite = null; // ts.playerBoxWhite().search(board);
+        Point posBlack = null; // ts.playerBoxBlack().search(board);
+        Point posWhiteReady = new Point(ts.search(ts.playerBoxWhiteReady, board));
+        Point posBlackReady = ts.search(ts.playerBoxBlackReady, board);
         System.out.println("ReadPlayerNames: posWhite " + posWhite + "  posBlack " + posBlack + "  posWhiteReady " + posWhiteReady + "  posBlackReady " + posBlackReady);
 
         playerNames[0] = null;
@@ -76,7 +82,7 @@ public abstract class ReadPlayerNames extends MyWorker<Void, Void> {
 
     @Override
     public Void doIt() throws Exception {
-        runIt(s, board, playerNames);
+        runIt(s, ts, board, playerNames);
         return null;
     }
 
@@ -90,10 +96,10 @@ public abstract class ReadPlayerNames extends MyWorker<Void, Void> {
         MyRobot.press();
         sleep();
         MyRobot.release();
-        sleep();
+        Thread.sleep(500);
         MyRobot.press();
         sleep();
-        MyRobot.move(x, y + 15);
+        MyRobot.move(x, y + 20);
         Thread.sleep(500);
         MyRobot.release();
 
