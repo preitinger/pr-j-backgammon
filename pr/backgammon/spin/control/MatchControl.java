@@ -87,6 +87,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     private ScreenSearchers s;
     private final Rectangle screenRect;
     private final Match match = new Match();
+    private boolean matchActive = false;
     private final WorkerState workerState = new WorkerState();
     private int handsOffCount = 0;
     private HandsOffDlg handsOffDlg = null;
@@ -205,6 +206,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                                     ex.printStackTrace();
                                 }
                                 match.set(result.match);
+                                matchActive = true;
 
                                 frame.setAutoroll(autoroll = true);
                                 frame.setAutorollEnabled(true);
@@ -573,6 +575,10 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     }
 
     private boolean stopMatch() {
+        if (!matchActive) {
+            return false;
+        }
+
         int option = JOptionPane.showOptionDialog(frame,
                 "Match beenden\n1 - Match beenden und Protokoll, Würfe und Joker speichern\n2 - Match abbrechen ohne Speichern\n3 - Match nicht beenden, weiter spielen",
                 "pr-j-backgammon", 2,
@@ -596,6 +602,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             closeMatch();
         }
         setTmpMenuItems(start);
+        matchActive = false;
         return true;
     }
 
