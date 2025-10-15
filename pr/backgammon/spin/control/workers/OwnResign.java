@@ -13,15 +13,16 @@ import pr.backgammon.spin.control.TemplateSearchers;
 public abstract class OwnResign extends MatchWorker<Void> {
     private final BoardSearchers bs;
     private final TemplateSearchers ts;
+    private final FastChequerSearch chequers;
     private final int resign;
     private BufferedImage board;
     private Raster boardRaster;
-    private FastChequerSearch chequers;
 
-    public OwnResign(BoardSearchers bs, TemplateSearchers ts, int resign) {
+    public OwnResign(BoardSearchers bs, TemplateSearchers ts, FastChequerSearch chequers, int resign) {
         this.bs = bs;
         this.ts = ts;
-        chequers = new FastChequerSearch(bs.cal, ts);
+        this.chequers = chequers;
+        // chequers = new FastChequerSearch(bs.cal, ts);
         this.resign = resign;
     }
 

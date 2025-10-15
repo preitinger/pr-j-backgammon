@@ -20,7 +20,7 @@ import pr.view.IGrid;
 public class MatchControlFrame extends JFrame {
     private final MatchControlFrameListener listener;
     private final JTextArea textArea, commands;
-    private final JCheckBox autorollCb;
+    private final JCheckBox autorollCb, alternativeControlCb;
     private boolean forwardAutoroll = true;
 
     public MatchControlFrame(JComponent matchView, JComponent matchMenu, JComponent jokersViewOwn,
@@ -42,9 +42,17 @@ public class MatchControlFrame extends JFrame {
         autorollCb.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                System.out.println("itemStateChanged: forwardAutoRoll=" + forwardAutoroll);
                 if (forwardAutoroll) {
                     listener.onAutowurfChanged(e.getStateChange() == ItemEvent.SELECTED);
+                }
+            }
+        });
+        alternativeControlCb = new JCheckBox("Altern. Steuerung");
+        alternativeControlCb.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (forwardAutoroll) {
+                    listener.onAlternativeControlChanged(e.getStateChange() == ItemEvent.SELECTED);
                 }
             }
         });
@@ -106,9 +114,14 @@ public class MatchControlFrame extends JFrame {
         grid.weight().y(0);
         grid.fill().none();
         grid.insets().left(15);
+        grid.anchor().west();
         grid.add(autorollCb);
 
-        grid.rect(1, 1, 3, 1);
+        grid.rect(0, 2, 1, 1);
+        grid.anchor().west();
+        grid.add(alternativeControlCb);
+
+        grid.rect(1, 1, 3, 2);
         grid.weight().x(1);
         grid.insets().top(15);
         grid.insets().left(15);

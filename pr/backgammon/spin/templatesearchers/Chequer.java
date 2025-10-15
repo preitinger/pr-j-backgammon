@@ -293,6 +293,7 @@ public class Chequer extends TemplateSearcher {
             textPoint.x = rec.x + 4;
             textPoint.y = rec.y + rec.height - 4;
             Imgproc.putText(numImg, String.valueOf(i), textPoint, fontFace, fontScale, RED);
+            System.out.println("best[" + i + "] " + best[i]);
         }
 
         try {

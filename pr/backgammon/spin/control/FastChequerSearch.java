@@ -26,7 +26,7 @@ public class FastChequerSearch {
 
     private final float[] tmpFloats = new float[40 * 3];
 
-    private static final int MAX_CHEQUER_DIST = 8;
+    private static final int MAX_CHEQUER_DIST = 13;
 
     private final Field fieldOwn = new Field();
     private final Field fieldOpp = new Field();
@@ -236,8 +236,13 @@ public class FastChequerSearch {
         var raster = board.getRaster();
         final int thresholdWhite = 150 * 3;
         final int thresholdBlack = 50 * 3;
+        System.out.println("width " + board.getWidth() + " height " + board.getHeight());
+        System.out.println("img type " + board.getType());
         while (n < 15) {
             y = (int) Math.round(y1);
+            System.out.println("x " + x + " y " + y);
+            assert (x < board.getWidth());
+            assert (y < board.getHeight());
             raster.getPixel(x, y, tmpPixel);
             int sum = tmpPixel[0] + tmpPixel[1] + tmpPixel[2];
             // System.out.println("n " + n + " sum " + sum + " thresholdWhite " +
@@ -529,8 +534,11 @@ public class FastChequerSearch {
         int todo = Field.NUM_ALL_CHEQUERS - bearoff;
         int toIgnore = 0;
         allChequers.clear();
+        double threshold = 0.8;
         for (int i = 0; i < bestColor.length; ++i) {
-            allChequers.add(bestColor[i]);
+            if (bestColor[i].val > threshold) {
+                allChequers.add(bestColor[i]);
+            }
         }
 
         while (todo > 0 && next < bestColor.length) {
@@ -714,6 +722,7 @@ public class FastChequerSearch {
     public ArrayList<LocAndVal> visibleChequersOnField(ArrayList<LocAndVal> allChequers, int field) {
         int centerX = centerXOfField(field);
         boolean topHalf = field >= 13;
+        System.out.println("visibleChequersOnField " + field);
         return filterColumn(allChequers, centerX, topHalf);
     }
 
@@ -828,6 +837,8 @@ public class FastChequerSearch {
             if (c.col > centerX - MAX_CHEQUER_DIST && c.col < centerX + MAX_CHEQUER_DIST
                     && ((topHalf && inTopHalf(c.row)) || (!topHalf && inBottomHalf(c.row)))) {
                 l.add(c);
+            } else {
+                System.out.println("Ignore chequer " + c + "  centerX " + centerX + " topHalf " + topHalf);
             }
         }
         return l;
@@ -917,6 +928,8 @@ public class FastChequerSearch {
             var next = visibleChequers.get(i);
             if (next.val >= minVal) {
                 sorted.add(next);
+            } else {
+                System.out.println("leave out loc and val: " + next);
             }
         }
         // ArrayList<LocAndVal> sorted = new ArrayList<LocAndVal>(visibleChequers);
@@ -931,7 +944,7 @@ public class FastChequerSearch {
         }
         // dump("chequersInLowerLayers", chequersInLowerLayers);
 
-        int chequersInTopLayer = countVisibleChequersInLayer(sorted, diffY, minVal);
+        int chequersInTopLayer = countVisibleChequersInLayer(sorted, diffY);
         // dump("chequersInTopLayer", chequersInTopLayer);
         return chequersInLowerLayers + chequersInTopLayer;
     }
@@ -940,24 +953,28 @@ public class FastChequerSearch {
      * @param diffY -dy falls aufwaerts, sonst +dy
      */
     int countLayers(ArrayList<LocAndVal> l, int diffY) {
+        System.out.println("countLayers: l is");
+        for (var c : l) {
+            System.out.println("c: " + c + " - " + c.custom);
+        }
         // 5 + 4 + 3 + 2 + 1
         int n = l.size();
-        // System.out.println("n " + n);
+        System.out.println("n " + n);
         if (n < 1)
             throw new IllegalArgumentException("l.size() " + n);
 
         int firstInTopLayer = diffY < 0 ? n - 1 : 0;
         var c = l.get(firstInTopLayer);
-        // System.out.println("val of first in top layer: " + c.val);
+        System.out.println("val of first in top layer: " + c.val);
         int isY = c.row;
         int yFirst = diffY < 0 ? bottom : top;
-        // System.out.println("firstInTopLayer " + firstInTopLayer);
-        // System.out.println("isY " + isY);
-        // System.out.println("yFirst " + yFirst);
+        System.out.println("firstInTopLayer " + firstInTopLayer);
+        System.out.println("isY " + isY);
+        System.out.println("yFirst " + yFirst);
 
         for (int layer = 0; layer < 5; ++layer) {
             int shallY = yFirst + (diffY * layer) / 2;
-            // System.out.println("layer " + layer + " shallY " + shallY);
+            System.out.println("layer " + layer + " shallY " + shallY);
             if (yEqual(isY, shallY)) {
                 return layer + 1;
             }
@@ -969,7 +986,7 @@ public class FastChequerSearch {
     /**
      * falls aufwaerts, diffY = -dy, sonst +dy
      */
-    int countVisibleChequersInLayer(ArrayList<LocAndVal> l, int diffY, double minVal) {
+    int countVisibleChequersInLayer(ArrayList<LocAndVal> l, int diffY) {
         int n = l.size();
         if (n <= 1)
             return n;

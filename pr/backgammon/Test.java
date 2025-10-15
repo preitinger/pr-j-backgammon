@@ -1,7 +1,9 @@
 package pr.backgammon;
 
+import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -51,6 +53,7 @@ import pr.backgammon.control.OwnMoveCb;
 import pr.backgammon.gnubg.model.GSetBoardSimple;
 import pr.backgammon.jokers.control.AllJokers;
 import pr.backgammon.model.Field;
+import pr.backgammon.model.LocAndVal;
 import pr.backgammon.model.Match;
 import pr.backgammon.model.Roll;
 import pr.backgammon.spin.SpinTracking;
@@ -946,7 +949,7 @@ public class Test {
         Rectangle boardRect = chequers.boardScreenshotRect(null);
         var bs = new BoardSearchers(cal, boardRect);
         var spinRolls = new SpinRolls(cal, boardRect);
-        var worker = new WaitForOppMove(cal, bs, ts, spinRolls) {
+        var worker = new WaitForOppMove(cal, bs, ts, chequers, spinRolls, true) {
             @Override
             public void resultOnEventDispatchThread(WaitForOppMoveRes result) {
                 System.out.println("result:");
@@ -1650,6 +1653,33 @@ public class Test {
 
     }
 
+    private static BufferedImage toBGR(BufferedImage src) {
+        BufferedImage dst = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D g = dst.createGraphics();
+        g.setComposite(AlphaComposite.Src); // kopiert RGB, ignoriert Alpha
+        g.drawImage(src, 0, 0, null);
+        g.dispose();
+        return dst;
+    }
+
+    private static void testChequersFromImg() throws Exception {
+        initOpenCV();
+
+        var img = toBGR(Tools.loadImg("screenshots/BUG_2025-10-14_18-10-17.png"));
+
+        var forCalWhite = Tools.loadImg("screenshots/forCalWhite.png");
+        CalibrationForSpin cal = new CalibrationForSpin(forCalWhite);
+        TemplateSearchers ts = new TemplateSearchers(new Rectangle(1600, 1000));
+
+        ts.chequerWhite.run(img, true);
+
+        // fuer schwarz threshold wohl 0.8
+
+        // FastChequerSearch chequers = new FastChequerSearch(cal, ts);
+        // chequers.init(img);
+
+    }
+
     public static void main(String[] args) throws Exception {
         // assert(false);
         // paintField1();
@@ -1685,6 +1715,7 @@ public class Test {
         // testBearInAggregation();
         // testMoveSplit();
         // testJavaEfficiency();
+        // testChequersFromImg();
     }
 
 }

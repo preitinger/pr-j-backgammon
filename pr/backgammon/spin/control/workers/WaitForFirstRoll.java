@@ -11,19 +11,19 @@ public abstract class WaitForFirstRoll extends MatchWorker<Void> {
     private final BoardSearchers bs;
     private final TemplateSearchers ts;
     private final SpinRolls spinRolls;
+    private final FastChequerSearch chequers;
 
-    public WaitForFirstRoll(BoardSearchers bs, TemplateSearchers ts, SpinRolls spinRolls) {
+    public WaitForFirstRoll(BoardSearchers bs, TemplateSearchers ts, FastChequerSearch chequers, SpinRolls spinRolls) {
         this.bs = bs;
         this.ts = ts;
         this.spinRolls = spinRolls;
-
+        this.chequers = chequers;
     }
 
     @Override
     public Void doIt() throws Exception {
         System.out.println("\n***** WAIT FOR FIRST ROLL\n");
         Match match = state.match;
-        FastChequerSearch chequers = new FastChequerSearch(bs.cal, ts);
 
         if (match.active != -1) {
             throw new IllegalStateException("Shall wait for first roll in a new game, but active not -1?!");

@@ -15,18 +15,20 @@ public abstract class OppRollOrDouble extends MatchWorker<Void> {
     private final BoardSearchers bs;
     private final SpinRolls spinRolls;
     private final TemplateSearchers ts;
+    private boolean startWithSleep;
 
-    public OppRollOrDouble(BoardSearchers bs, SpinRolls spinRolls, TemplateSearchers ts) {
+    public OppRollOrDouble(BoardSearchers bs, SpinRolls spinRolls, TemplateSearchers ts, boolean startWithSleep) {
         this.bs = bs;
         this.spinRolls = spinRolls;
         this.ts = ts;
+        this.startWithSleep = startWithSleep;
     }
 
     @Override
     public Void doIt() throws Exception {
         System.out.println("\n***** OPP ROLL OR DOUBLE\n");
         Match match = state.match;
-        
+
         if (match.active != 1 - match.own) {
             throw new IllegalStateException("Gegner nicht am Wurf?!");
         }
@@ -34,12 +36,16 @@ public abstract class OppRollOrDouble extends MatchWorker<Void> {
         // Warten bis Aufgabedialog oder Doppeldialog oder Wurf des Gegners
 
         do {
-            Thread.sleep(100);
+            if (startWithSleep) {
+                Thread.sleep(100);
+            } else {
+                startWithSleep = true;
+            }
             var board = bs.boardShot();
             // var boardRaster = board.getRaster();
 
             if (visible(ts.dlgCorner, board)) {
-            // if (bs.dlgCorner.run(boardRaster) != null) {
+                // if (bs.dlgCorner.run(boardRaster) != null) {
                 System.out.println("dialog erkannt");
                 int resign = ts.searchOppResign(board);
                 if (resign > 0) {
@@ -47,7 +53,8 @@ public abstract class OppRollOrDouble extends MatchWorker<Void> {
                     System.out.println("resign erkannt");
                     return null;
                 } else {
-                    // if (bs.verdoppelnOpp.run(boardRaster) != null || bs.verdoppelnOppLong.run(boardRaster) != null) {
+                    // if (bs.verdoppelnOpp.run(boardRaster) != null ||
+                    // bs.verdoppelnOppLong.run(boardRaster) != null) {
                     if (searchVerdoppelnOpp(board) != null) {
                         System.out.println("doppeln vom gegner erkannt");
                         match.offerDouble(1 - match.own);
@@ -74,7 +81,8 @@ public abstract class OppRollOrDouble extends MatchWorker<Void> {
                 }
 
                 // if (spinRolls.isOwnDice()) {
-                //     // Wahrscheinlich war die Erkennung zu schnell und es ist noch der alte eigene Wurf.
+                // // Wahrscheinlich war die Erkennung zu schnell und es ist noch der alte
+                // eigene Wurf.
                 // }
             }
         } while (true);

@@ -9,6 +9,7 @@ import java.io.IOException;
 import pr.backgammon.model.Match;
 import pr.backgammon.spin.control.BoardSearchers;
 import pr.backgammon.spin.control.CalibrationForSpin;
+import pr.backgammon.spin.control.FastChequerSearch;
 import pr.backgammon.spin.control.ScanUtils;
 import pr.backgammon.spin.control.SpinRolls;
 import pr.backgammon.spin.control.TemplateSearchers;
@@ -53,6 +54,7 @@ public abstract class StartMatch extends MyWorker<StartMatchRes, Void> {
 
         s = res.bs = new BoardSearchers(res.cal, boardRect);
         res.spinRolls = new SpinRolls(res.cal, boardRect);
+        res.chequers = new FastChequerSearch(res.cal, ts);
 
         if (!ts.visible(ts.bereit, board)) {
             try {

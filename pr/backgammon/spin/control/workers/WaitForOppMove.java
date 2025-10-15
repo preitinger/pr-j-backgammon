@@ -23,23 +23,27 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
     private final CalibrationForSpin cal;
     private final BoardSearchers bs;
     private final TemplateSearchers ts;
+    private final FastChequerSearch chequers;
     private final SpinRolls spinRolls;
     private int savedFiles = 0;
+    private boolean startWithSleep;
 
-    public WaitForOppMove(CalibrationForSpin cal, BoardSearchers bs, TemplateSearchers ts, SpinRolls spinRolls) {
+    public WaitForOppMove(CalibrationForSpin cal, BoardSearchers bs, TemplateSearchers ts, FastChequerSearch chequers, SpinRolls spinRolls, boolean startWithSleep) {
         this.cal = cal;
         this.bs = bs;
         this.ts = ts;
+        this.chequers = chequers;
         this.spinRolls = spinRolls;
+        this.startWithSleep = startWithSleep;
     }
 
     @Override
     public WaitForOppMoveRes doIt() throws Exception {
         System.out.println("\n***** WAIT FOR OPP MOVE\n");
         WaitForOppMoveRes res = new WaitForOppMoveRes();
-        res.cal = cal;
-        res.spinRolls = spinRolls;
-        res.chequers = new FastChequerSearch(cal, ts);
+        // res.cal = cal;
+        // spinRolls = spinRolls;
+        // res.chequers = new FastChequerSearch(cal, ts);
 
         System.out.println("match.active vor AllMoves.find: " + state.match.active);
         AllMoves.find(state.match, state.allMoves, state.findTaskArray);
@@ -131,8 +135,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
         // ")));
 
         // // Falls mit Autowurf eigener Wurf bereits sichtbar: diesen im match setzen
-        // if (res.spinRolls.isOwnDice()) {
-        // res.match.roll(res.spinRolls.die1(), res.spinRolls.die2());
+        // if (spinRolls.isOwnDice()) {
+        // res.match.roll(spinRolls.die1(), spinRolls.die2());
         // }
 
         // return res;
@@ -227,8 +231,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
 
         // // // Falls mit Autowurf eigener Wurf bereits sichtbar: diesen im match
         // setzen
-        // // if (res.spinRolls.isOwnDice()) {
-        // // res.match.roll(res.spinRolls.die1(), res.spinRolls.die2());
+        // // if (spinRolls.isOwnDice()) {
+        // // res.match.roll(spinRolls.die1(), spinRolls.die2());
         // // }
 
         // // return res;
@@ -264,8 +268,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
                 }
             }
 
-            res.chequers.init(board);
-            res.chequers.getFields(newOwn, newOpp);
+            chequers.init(board);
+            chequers.getFields(newOwn, newOpp);
 
             int nMoves = state.allMoves.length();
 
@@ -278,8 +282,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
                     System.out.println(move.append(new StringBuilder("Zug des Gegner erkannt: ")));
 
                     // Falls mit Autowurf eigener Wurf bereits sichtbar: diesen im match setzen
-                    if (res.spinRolls.isOwnDice()) {
-                        match.roll(res.spinRolls.die1(), res.spinRolls.die2());
+                    if (spinRolls.isOwnDice()) {
+                        match.roll(spinRolls.die1(), spinRolls.die2());
                     }
 
                     return res;
@@ -331,8 +335,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
             }
 
             if (winningMove != null) {
-                res.chequers.init(board);
-                res.chequers.getFields(newOwn, newOpp);
+                chequers.init(board);
+                chequers.getFields(newOwn, newOpp);
 
                 if (!(newOwn.numChequersAsExpected() && newOpp.numChequersAsExpected())) {
                     // Because the board is not updated atomically by Spin, there can be too many or
@@ -360,8 +364,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
             if (spinRolls.isOwnDice() || (!spinRolls.isOppDice() && !spinRolls.isInitialDice())
                     || ts.visible(ts.bVerlassen, board)) {
 
-                res.chequers.init(board);
-                res.chequers.getFields(newOwn, newOpp);
+                chequers.init(board);
+                chequers.getFields(newOwn, newOpp);
                 System.out.println("vor findMove: match.active  " + match.active);
                 var foundMove = findMove(res);
                 if (foundMove == null) {
@@ -374,8 +378,8 @@ public abstract class WaitForOppMove extends MatchWorker<WaitForOppMoveRes> {
                 System.out.println(foundMove.append(new StringBuilder("Zug des Gegner erkannt: ")));
 
                 // Falls mit Autowurf eigener Wurf bereits sichtbar: diesen im match setzen
-                if (res.spinRolls.isOwnDice()) {
-                    match.roll(res.spinRolls.die1(), res.spinRolls.die2());
+                if (spinRolls.isOwnDice()) {
+                    match.roll(spinRolls.die1(), spinRolls.die2());
                 }
 
                 return res;

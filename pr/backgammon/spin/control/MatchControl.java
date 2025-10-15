@@ -83,6 +83,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     private CalibrationForSpin calWhite = null, calBlack = null, cal = null;
     private BoardSearchers bs;
     private TemplateSearchers ts;
+    private FastChequerSearch chequers;
     private SpinRolls spinRolls;
     private ScreenSearchers s;
     private final Rectangle screenRect;
@@ -100,6 +101,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     private final AllJokers ownJokers, oppJokers;
 
     private boolean optimizedRolling = true;
+    private boolean alternativeControl = false;
 
     public MatchControl() throws IOException {
         ownJokers = new AllJokers();
@@ -212,6 +214,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                                 frame.setAutorollEnabled(true);
                                 cal = result.cal;
                                 bs = result.bs;
+                                chequers = result.chequers;
                                 spinRolls = result.spinRolls;
                                 matchView.setOwnWhite(cal.ownWhite);
                                 matchView.setClockwise(!cal.ownWhite);
@@ -576,7 +579,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
 
     private boolean stopMatch() {
         if (!matchActive) {
-            return false;
+            return true;
         }
 
         int option = JOptionPane.showOptionDialog(frame,
@@ -618,7 +621,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             ownMove = null;
         }
 
-        exeMatchWorker(new OwnResign(bs, ts, val) {
+        exeMatchWorker(new OwnResign(bs, ts, chequers, val) {
             @Override
             public void resultOnEventDispatchThread(Void result) {
                 addCmd(new GSetTurn(1));
@@ -658,7 +661,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         // can be an initial roll or an own roll or an opponent roll because it is spin
         // ... ;-)
         setTmpMenuItems(rescan, reset);
-        exeMatchWorker(new WaitForFirstRoll(bs, ts, spinRolls) {
+        exeMatchWorker(new WaitForFirstRoll(bs, ts, chequers, spinRolls) {
             @Override
             public void resultOnEventDispatchThread(Void result) {
                 System.out.println("result from WaitForFirstroll");
@@ -723,11 +726,15 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     private void oppMove() {
         setTmpMenuItems(rescan, reset);
 
-        logShots("Gegnerische Schüsse:");
+        // logShots("Gegnerische Schüsse:");
 
         oppJokers.count(match, workerState.tmp);
-        exeMatchWorker(new WaitForOppMove(cal, bs, ts,
-                spinRolls) {
+
+        if (alternativeControl) {
+            JOptionPane.showMessageDialog(frame, "Bestätige, wenn Gegner gezogen (oder aufgegeben) hat!");
+        }
+        exeMatchWorker(new WaitForOppMove(cal, bs, ts, chequers,
+                spinRolls, !alternativeControl) {
             @Override
             public void resultOnEventDispatchThread(WaitForOppMoveRes result) {
                 System.out.println("result from WaitForOppMoveRes");
@@ -925,7 +932,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         workerState.match.set(match);
         ownJokers.count(match, workerState.tmp);
 
-        logShots("Eigene Schüsse:");
+        // logShots("Eigene Schüsse:");
 
         ownMove = new OwnMove(workerState, matchView, new OwnMoveCb() {
             @Override
@@ -1044,7 +1051,16 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         if (match.active != 1 - match.own) {
             throw new IllegalStateException();
         }
-        exeMatchWorker(new OppRollOrDouble(bs, spinRolls, ts) {
+        if (alternativeControl) {
+            frame.toFront();
+
+            // This call will block until the dialog has been closed.
+            JOptionPane.showMessageDialog(frame, "Bestätige, wenn Gegner gewürfelt (oder gedoppelt oder aufgegeben) hat!");
+
+            // throw new UnsupportedOperationException("nyi");
+        }
+
+        exeMatchWorker(new OppRollOrDouble(bs, spinRolls, ts, !alternativeControl) {
             @Override
             public void resultOnEventDispatchThread(Void result) {
                 System.out.println("OppRollOrDouble returned");
@@ -1368,5 +1384,10 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             ex.printStackTrace();
             ;
         }
+    }
+
+    @Override
+    public void onAlternativeControlChanged(boolean b) {
+        alternativeControl = b;
     }
 }
