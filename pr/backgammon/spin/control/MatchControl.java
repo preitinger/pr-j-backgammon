@@ -253,8 +253,9 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                     stopMatch();
                     break;
 
-                case "accept":
-                    if (ownPlayer().resign > 0) {
+                case "accept": {
+                    int resign = ownPlayer().resign;
+                    if (resign > 0) {
                         exeWorker(new ClickBoardButton(bs, ts, ts.dlgJa) {
                             @Override
                             public void resultOnEventDispatchThread(Boolean successful) {
@@ -265,6 +266,8 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
 
                                 match.acceptResign();
                                 matchView.setMatch(match, workerState.ongoingMove);
+                                addCmd(new GSetTurn(1 - match.own));
+                                addCmd(new GResign(resign));
                                 addCmd(new GAccept());
 
                                 if (match.finished()) {
@@ -313,6 +316,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
                         }, false);
                     }
                     break;
+                }
                 case "reject":
                     if (ownPlayer().resign > 0) {
                         exeWorker(new ClickBoardButton(bs, ts, ts.dlgNein) {
@@ -624,7 +628,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
         exeMatchWorker(new OwnResign(bs, ts, chequers, val) {
             @Override
             public void resultOnEventDispatchThread(Void result) {
-                addCmd(new GSetTurn(1));
+                addCmd(new GSetTurn(match.own));
                 addCmd(new GResign(val));
 
                 if (match.finished()) {
@@ -693,7 +697,6 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
     private void ownResignResponse() {
         System.out.println("ownResignResponse");
         int resign = match.getPlayer(match.own).resign;
-        addCmd(new GResign(resign));
         matchView.setMatch(match, workerState.ongoingMove);
 
         String val;
@@ -869,7 +872,7 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             ex.printStackTrace();
         }
 
-        match.active = -1; // to show that no match is running
+        matchActive = false;
     }
 
     private void logShots(String header) {
@@ -1055,7 +1058,8 @@ public class MatchControl implements MenuListener, MatchControlFrameListener {
             frame.toFront();
 
             // This call will block until the dialog has been closed.
-            JOptionPane.showMessageDialog(frame, "Bestätige, wenn Gegner gewürfelt (oder gedoppelt oder aufgegeben) hat!");
+            JOptionPane.showMessageDialog(frame,
+                    "Bestätige, wenn Gegner gewürfelt (oder gedoppelt oder aufgegeben) hat!");
 
             // throw new UnsupportedOperationException("nyi");
         }
